@@ -76,15 +76,19 @@
     .ejercicio-status { font-size: 18px; }
 
     .series-table { border-top: 1px solid var(--border); }
-    .serie-header { display: grid; grid-template-columns: 40px 1fr 1fr 60px 32px; gap: 6px; padding: 8px 14px; background: var(--surface); }
+    .serie-header { display: grid; grid-template-columns: 32px 1fr 1fr 72px 32px; gap: 6px; padding: 8px 14px; background: var(--surface); }
     .serie-header span { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; text-align: center; }
-    .serie-row { display: grid; grid-template-columns: 40px 1fr 1fr 60px 32px; gap: 6px; padding: 8px 14px; border-top: 1px solid var(--border); align-items: center; }
+    .serie-row { display: grid; grid-template-columns: 32px 1fr 1fr 72px 32px; gap: 6px; padding: 8px 14px; border-top: 1px solid var(--border); align-items: center; }
     .serie-num { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
     .serie-input { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; padding: 6px 8px; width: 100%; text-align: center; -webkit-appearance: none; }
     .serie-input:focus { outline: none; border-color: var(--accent); }
     .serie-input.completada { background: rgba(0,229,160,0.08); border-color: rgba(0,229,160,0.3); }
-    .rpe-select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 12px; padding: 6px 4px; width: 100%; text-align: center; -webkit-appearance: none; }
-    .rpe-select.set { color: var(--accent); background: rgba(0,229,160,0.06); }
+    .dif-btns { display: flex; gap: 3px; justify-content: center; }
+    .dif-btn { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+    .dif-btn:hover { filter: brightness(1.2); }
+    .dif-btn.sel-facil  { background: rgba(0,229,160,0.15); border-color: var(--accent); }
+    .dif-btn.sel-neutro { background: rgba(255,214,0,0.15);  border-color: var(--warning); }
+    .dif-btn.sel-dificil{ background: rgba(255,77,109,0.15); border-color: var(--danger); }
     .check-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; margin: 0 auto; }
     .check-btn.done { background: var(--accent); border-color: var(--accent); color: #0D0F14; }
 
@@ -536,7 +540,7 @@ function renderSesionActiva() {
       </div>
       <div class="series-table" id="ej-table-${ei}">
         <div class="serie-header">
-          <span>Serie</span><span>Kg</span><span>Reps</span><span>RPE</span><span>✓</span>
+          <span>#</span><span>Kg</span><span>Reps</span><span>Dificultad</span><span>✓</span>
         </div>
         ${ej.series.map((s,si)=>`
         <div class="serie-row">
@@ -545,10 +549,11 @@ function renderSesionActiva() {
             onchange="updateSerie(${ei},${si},'kg',this.value)" min="0" step="0.5" />
           <input type="number" class="serie-input ${s.completada?'completada':''}" placeholder="—" value="${s.reps}"
             onchange="updateSerie(${ei},${si},'reps',this.value)" min="0" />
-          <select class="rpe-select ${s.rpe?'set':''}" onchange="updateSerie(${ei},${si},'rpe',this.value)">
-            <option value="">—</option>
-            ${[6,7,7.5,8,8.5,9,9.5,10].map(r=>`<option value="${r}" ${s.rpe==r?'selected':''}>${r}</option>`).join('')}
-          </select>
+          <div class="dif-btns">
+            <button class="dif-btn ${s.rpe==='facil'?'sel-facil':''}" onclick="updateSerie(${ei},${si},'rpe','facil')" title="Fácil — subir peso">↑</button>
+            <button class="dif-btn ${s.rpe==='neutro'?'sel-neutro':''}" onclick="updateSerie(${ei},${si},'rpe','neutro')" title="Bien — mantener peso">—</button>
+            <button class="dif-btn ${s.rpe==='dificil'?'sel-dificil':''}" onclick="updateSerie(${ei},${si},'rpe','dificil')" title="Difícil — bajar peso">↓</button>
+          </div>
           <div class="check-btn ${s.completada?'done':''}" onclick="toggleSerie(${ei},${si})">
             ${s.completada?'✓':''}
           </div>
