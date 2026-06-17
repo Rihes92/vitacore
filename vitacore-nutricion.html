@@ -984,8 +984,8 @@ async function procesarFotoEscaner(event) {
       reader.readAsDataURL(file);
     });
 
-    // Llamar a n8n webhook (que llama a Claude internamente)
-    const WEBHOOK_URL = 'https://tropical-ladder-showing.ngrok-free.dev/webhook/vitacore-scanner';
+    // Llamar a VitaCore API en Railway (permanente, sin necesidad de Mac encendida)
+    const WEBHOOK_URL = 'https://vitacore-api-production-46fa.up.railway.app/scanner';
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
