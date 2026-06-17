@@ -383,6 +383,76 @@
 </div>
 
 <!-- TOAST -->
+<!-- ══════════ MODAL ESCÁNER ══════════ -->
+<div class="modal-overlay" id="modalEscaner">
+  <div class="porcion-modal">
+    <div class="modal-title-row">
+      <span class="modal-title">📷 Escanear etiqueta</span>
+      <button class="modal-close" onclick="cerrarModal('modalEscaner')">✕</button>
+    </div>
+
+    <!-- PASO 1: subir foto -->
+    <div id="escaner-paso1">
+      <div style="border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:28px;text-align:center;cursor:pointer;" onclick="document.getElementById('escaner-input').click()">
+        <div style="font-size:36px;margin-bottom:8px;">📸</div>
+        <div style="font-size:13px;font-weight:700;">Toca para subir la foto</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Tabla nutricional del producto</div>
+      </div>
+      <input type="file" id="escaner-input" accept="image/*" style="display:none;" onchange="procesarFotoEscaner(event)" />
+      <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">La IA leerá los valores automáticamente · Requiere internet</p>
+    </div>
+
+    <!-- PASO 2: procesando -->
+    <div id="escaner-paso2" style="display:none;text-align:center;padding:20px 0;gap:12px;flex-direction:column;align-items:center;">
+      <div style="font-size:32px;">🤖</div>
+      <div style="font-size:14px;font-weight:700;">Analizando etiqueta...</div>
+      <div style="font-size:12px;color:var(--muted);">La IA está leyendo los valores nutricionales</div>
+      <div class="loading-dots" style="margin-top:4px;"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- PASO 3: confirmar datos -->
+    <div id="escaner-paso3" style="display:none;flex-direction:column;gap:12px;">
+      <div style="font-size:13px;color:var(--muted);">Verifica los datos extraídos y agrega el nombre:</div>
+      <div class="form-field">
+        <label class="form-label">Nombre del producto</label>
+        <input type="text" class="form-input" id="esc-nombre" placeholder="ej. Avena Quaker 3 Minutitos" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Calorías (kcal)</label>
+          <input type="number" class="form-input" id="esc-cals" placeholder="—" min="0" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Porción (g)</label>
+          <input type="number" class="form-input" id="esc-gramos" placeholder="100" min="1" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Proteína (g)</label>
+          <input type="number" class="form-input" id="esc-prot" placeholder="—" min="0" step="0.1" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Carbos (g)</label>
+          <input type="number" class="form-input" id="esc-carb" placeholder="—" min="0" step="0.1" />
+        </div>
+      </div>
+      <div class="form-field" style="max-width:50%;">
+        <label class="form-label">Grasas (g)</label>
+        <input type="number" class="form-input" id="esc-fat" placeholder="—" min="0" step="0.1" />
+      </div>
+      <button class="btn-agregar-porcion" onclick="confirmarEscaner()">Guardar en Mis alimentos</button>
+    </div>
+
+    <!-- ERROR -->
+    <div id="escaner-error" style="display:none;text-align:center;padding:12px 0;flex-direction:column;gap:8px;align-items:center;">
+      <div style="font-size:28px;">⚠️</div>
+      <div style="font-size:13px;font-weight:700;color:var(--danger);" id="escaner-error-msg">No se pudo leer la etiqueta</div>
+      <button class="btn-agregar-porcion" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="reiniciarEscaner()">Intentar de nuevo</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- NAVBAR -->
@@ -658,7 +728,14 @@ function mostrarResultadosIniciales() {
   }
   html += `<div class="search-section-title">Alimentos comunes</div>`;
   html += local.map(f=>foodItem(f)).join('');
-  html += `<div class="search-section-title">Agregar manualmente</div>`;
+  html += `<div class="search-section-title">Agregar alimento</div>`;
+  html += `<div class="food-result-item" onclick="abrirEscaner()">
+    <div class="food-result-icon">📷</div>
+    <div class="food-result-info">
+      <div class="food-result-name">Escanear tabla nutricional</div>
+      <div class="food-result-meta">Foto de la etiqueta → IA extrae los datos</div>
+    </div>
+  </div>`;
   html += `<div class="food-result-item" onclick="abrirManual()">
     <div class="food-result-icon">✏️</div>
     <div class="food-result-info">
@@ -871,6 +948,121 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════════
+// ESCÁNER DE TABLA NUTRICIONAL
+// ══════════════════════════════════════
+function abrirEscaner() {
+  cerrarModal('modalBuscador');
+  reiniciarEscaner();
+  document.getElementById('modalEscaner').classList.add('show');
+}
+
+function reiniciarEscaner() {
+  document.getElementById('escaner-paso1').style.display = 'block';
+  document.getElementById('escaner-paso2').style.display = 'none';
+  document.getElementById('escaner-paso3').style.display = 'none';
+  document.getElementById('escaner-error').style.display = 'none';
+  document.getElementById('escaner-input').value = '';
+}
+
+async function procesarFotoEscaner(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Paso 2: procesando
+  document.getElementById('escaner-paso1').style.display = 'none';
+  document.getElementById('escaner-paso2').style.display = 'flex';
+
+  try {
+    // Convertir imagen a base64
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    // Llamar a Claude API con la imagen
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: file.type || 'image/jpeg', data: base64 }
+            },
+            {
+              type: 'text',
+              text: 'Lee esta tabla nutricional y extrae los valores. Responde SOLO con JSON válido, sin texto adicional, sin backticks. Formato exacto: {"cals":0,"prot":0,"carb":0,"fat":0,"gramos":100} donde los valores son por porción indicada en la etiqueta. Si no puedes leer algún valor, usa 0. gramos es el tamaño de la porción.'
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const texto = data.content?.[0]?.text || '';
+    const parsed = JSON.parse(texto.replace(/```json|```/g,'').trim());
+
+    // Paso 3: confirmar
+    document.getElementById('escaner-paso2').style.display = 'none';
+    document.getElementById('escaner-paso3').style.display = 'flex';
+    document.getElementById('esc-cals').value   = parsed.cals   || '';
+    document.getElementById('esc-prot').value   = parsed.prot   || '';
+    document.getElementById('esc-carb').value   = parsed.carb   || '';
+    document.getElementById('esc-fat').value    = parsed.fat    || '';
+    document.getElementById('esc-gramos').value = parsed.gramos || 100;
+    document.getElementById('esc-nombre').focus();
+
+  } catch(e) {
+    document.getElementById('escaner-paso2').style.display = 'none';
+    document.getElementById('escaner-error').style.display = 'flex';
+    document.getElementById('escaner-error-msg').textContent =
+      e.message?.includes('fetch') ? 'Sin conexión a internet' : 'No se pudo leer la etiqueta. Intenta con mejor luz o ángulo.';
+  }
+}
+
+function confirmarEscaner() {
+  const nombre = document.getElementById('esc-nombre').value.trim();
+  const cals   = parseFloat(document.getElementById('esc-cals').value)   || 0;
+  const gramos = parseFloat(document.getElementById('esc-gramos').value) || 100;
+  const prot   = parseFloat(document.getElementById('esc-prot').value)   || 0;
+  const carb   = parseFloat(document.getElementById('esc-carb').value)   || 0;
+  const fat    = parseFloat(document.getElementById('esc-fat').value)    || 0;
+
+  if (!nombre) { showToast('⚠️ Agrega el nombre del producto'); return; }
+  if (!cals)   { showToast('⚠️ Agrega las calorías'); return; }
+
+  // Normalizar a por 100g
+  const factor = 100 / gramos;
+  const nuevo = {
+    id: 'esc_' + Date.now(),
+    nombre, emoji: '📦',
+    cals:  Math.round(cals  * factor),
+    prot:  Math.round(prot  * factor * 10) / 10,
+    carb:  Math.round(carb  * factor * 10) / 10,
+    fat:   Math.round(fat   * factor * 10) / 10,
+    por100g: true,
+    fuente: 'Escaneado'
+  };
+
+  const miBD = getMiBD();
+  miBD.push(nuevo);
+  saveMiBD(miBD);
+
+  cerrarModal('modalEscaner');
+  showToast(`✓ ${nombre} guardado en Mis alimentos`);
+  // Abrir buscador para que lo pueda agregar a la comida
+  setTimeout(() => {
+    abrirBuscador(momentoActivo, document.getElementById('modalMomentoTitle')?.textContent || 'comida');
+  }, 300);
 }
 
 // ══════════════════════════════════════
