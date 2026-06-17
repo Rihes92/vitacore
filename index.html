@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitaCore — Tu perfil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0D0F14;
+      --surface: #161A22;
+      --surface2: #1E2430;
+      --accent: #00E5A0;
+      --accent2: #0057FF;
+      --text: #F0F2F5;
+      --muted: #7A8499;
+      --border: #262D3D;
+      --danger: #FF4D6D;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .progress-track {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      padding: 28px 24px 32px;
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+      animation: slideUp 0.35s cubic-bezier(.4,0,.2,1);
+    }
+    .card.active { display: flex; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .step-sub {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: -12px;
+    }
+
+    /* ── OPTIONS GRID ── */
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .options.single { grid-template-columns: 1fr; }
+
+    .option-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .option-btn:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+    .option-btn.selected {
+      border-color: var(--accent);
+      background: rgba(0, 229, 160, 0.08);
+    }
+    .option-btn.selected .opt-icon { color: var(--accent); }
+
+    .opt-icon { font-size: 22px; }
+    .opt-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .opt-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ── FORM FIELDS ── */
+    .fields { display: flex; flex-direction: column; gap: 14px; }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    input, select {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      padding: 13px 14px;
+      width: 100%;
+      transition: border-color 0.18s;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    input::placeholder { color: var(--muted); }
+
+    select option { background: var(--surface2); }
+
+    /* ── SEX TOGGLE ── */
+    .sex-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .sex-btn {
+      padding: 13px;
+      background: var(--surface);
+      border: none;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .sex-btn.selected {
+      background: rgba(0, 229, 160, 0.12);
+      color: var(--accent);
+    }
+
+    /* ── CTA BUTTON ── */
+    .cta-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #0D0F14;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+      letter-spacing: 0.2px;
+    }
+    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 0;
+      text-align: center;
+      transition: color 0.18s;
+    }
+    .btn-back:hover { color: var(--text); }
+
+    /* ── RESULTADO ── */
+    #step-result {
+      gap: 20px;
+    }
+
+    .result-header {
+      background: linear-gradient(135deg, rgba(0,229,160,0.12), rgba(0,87,255,0.08));
+      border: 1.5px solid rgba(0,229,160,0.2);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .result-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .result-tagline { font-size: 13px; color: var(--muted); }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .metric-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); }
+    .metric-unit { font-size: 11px; color: var(--muted); }
+
+    .macros-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .macro-pill {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .macro-pill.prot { border-color: rgba(0,229,160,0.3); }
+    .macro-pill.carb { border-color: rgba(0,87,255,0.3); }
+    .macro-pill.fat  { border-color: rgba(255,77,109,0.2); }
+
+    .macro-g { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .macro-pill.prot .macro-g { color: var(--accent); }
+    .macro-pill.carb .macro-g { color: var(--accent2); }
+    .macro-pill.fat  .macro-g { color: var(--danger); }
+    .macro-name { font-size: 11px; color: var(--muted); }
+
+    .imc-bar-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .imc-bar-track {
+      height: 8px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #0057FF 0%, #00E5A0 40%, #FFD600 70%, #FF4D6D 100%);
+      position: relative;
+    }
+    .imc-marker {
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: left 0.6s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .imc-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── ERROR ── */
+    .field-error {
+      font-size: 12px;
+      color: var(--danger);
+      display: none;
+    }
+    .field-error.show { display: block; }
+
+    /* ── SPLASH ── */
+    #splash {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px 24px;
+      animation: slideUp 0.4s ease;
+    }
+    .splash-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -2px;
+    }
+    .splash-logo span { color: var(--accent); }
+    .splash-sub { font-size: 16px; color: var(--muted); text-align: center; line-height: 1.6; }
+
+    .splash-features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin: 8px 0;
+    }
+    .splash-feat {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+    .feat-icon { font-size: 20px; }
+    .feat-text { font-size: 14px; color: var(--muted); }
+    .feat-text strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════ SPLASH ════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-logo">Vita<span>Core</span></div>
+  <p class="splash-sub">Tu plan de nutrición y entrenamiento,<br>calculado con base en tu cuerpo real.</p>
+
+  <div class="splash-features">
+    <div class="splash-feat">
+      <span class="feat-icon">🔬</span>
+      <span class="feat-text"><strong>Calculadoras científicas</strong> — TMB, IMC, macros por objetivo</span>
+    </div>
+    <div class="splash-feat">
+      <span class="feat-icon">🎯</span>
+      <span class="feat-text"><strong>Plan personalizado</strong> — basado en tus datos reales</span>
+    </div>
+    <div class="splash-feat">
+      <span class="feat-icon">📈</span>
+      <span class="feat-text"><strong>Seguimiento de progreso</strong> — ve cómo evoluciona tu cuerpo</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="startOnboarding()" style="max-width:480px;">
+    Crear mi perfil — 5 preguntas
+  </button>
+  <p style="font-size:12px;color:var(--muted);text-align:center;">Menos de 2 minutos · Sin registro</p>
+</div>
+
+<!-- ════════════════════════════════ ONBOARDING ════════════════════════════════ -->
+<div class="topbar" id="topbar" style="display:none;">
+  <div class="logo">Vita<span>Core</span></div>
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:20%"></div>
+    </div>
+    <span class="progress-label" id="progressLabel">1 de 5</span>
+  </div>
+</div>
+
+<!-- PASO 1 — Objetivo -->
+<div class="card" id="step-1">
+  <span class="step-eyebrow">Paso 1</span>
+  <h2 class="step-title">¿Cuál es tu objetivo principal?</h2>
+  <p class="step-sub">Esto define tus calorías y la distribución de macronutrientes.</p>
+
+  <div class="options single" id="opts-objetivo">
+    <button class="option-btn" data-val="corte" onclick="selectOption('objetivo','corte',this)">
+      <span class="opt-icon">🔥</span>
+      <span class="opt-label">Perder grasa</span>
+      <span class="opt-desc">Déficit calórico controlado, preservando músculo</span>
+    </button>
+    <button class="option-btn" data-val="volumen" onclick="selectOption('objetivo','volumen',this)">
+      <span class="opt-icon">💪</span>
+      <span class="opt-label">Ganar músculo</span>
+      <span class="opt-desc">Superávit calórico con alta proteína</span>
+    </button>
+    <button class="option-btn" data-val="mantenimiento" onclick="selectOption('objetivo','mantenimiento',this)">
+      <span class="opt-icon">⚖️</span>
+      <span class="opt-label">Mantenerme</span>
+      <span class="opt-desc">Equilibrio calórico y composición corporal estable</span>
+    </button>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="btn-primary" id="btn-1" onclick="goTo(2)" disabled>Continuar</button>
+  </div>
+</div>
+
+<!-- PASO 2 — Datos personales -->
+<div class="card" id="step-2">
+  <span class="step-eyebrow">Paso 2</span>
+  <h2 class="step-title">Cuéntame sobre ti</h2>
+  <p class="step-sub">Estos datos son la base de todos los cálculos. Se guardan solo en tu dispositivo.</p>
+
+  <div class="fields">
+    <div class="field-group">
+      <label>Nombre</label>
+      <input type="text" id="input-nombre" placeholder="¿Cómo te llamas?" maxlength="30" oninput="validateStep2()" />
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Edad</label>
+        <input type="number" id="input-edad" placeholder="años" min="14" max="99" oninput="validateStep2()" />
+      </div>
+      <div class="field-group">
+        <label>Sexo</label>
+        <div class="sex-toggle">
+          <button class="sex-btn" id="btn-hombre" onclick="selectSex('hombre')">Hombre</button>
+          <button class="sex-btn" id="btn-mujer" onclick="selectSex('mujer')">Mujer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Peso (kg)</label>
+        <input type="number" id="input-peso" placeholder="ej. 72" min="30" max="300" step="0.1" oninput="validateStep2()" />
+      </div>
+      <div class="field-group">
+        <label>Altura (cm)</label>
+        <input type="number" id="input-altura" placeholder="ej. 170" min="100" max="250" oninput="validateStep2()" />
+      </div>
+    </div>
+
+    <span class="field-error" id="error-step2">Completa todos los campos correctamente.</span>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="btn-primary" id="btn-2" onclick="goTo(3)" disabled>Continuar</button>
+    <button class="btn-back" onclick="goTo(1)">← Volver</button>
+  </div>
+</div>
+
+<!-- PASO 3 — Nivel de actividad -->
+<div class="card" id="step-3">
+  <span class="step-eyebrow">Paso 3</span>
+  <h2 class="step-title">¿Qué tan activo eres?</h2>
+  <p class="step-sub">Incluye tu trabajo, deporte y ejercicio semanal en promedio.</p>
+
+  <div class="options single" id="opts-actividad">
+    <button class="option-btn" data-val="1.2" onclick="selectOption('actividad','1.2',this)">
+      <span class="opt-icon">🪑</span>
+      <span class="opt-label">Sedentario</span>
+      <span class="opt-desc">Trabajo de escritorio, poco o nada de ejercicio</span>
+    </button>
+    <button class="option-btn" data-val="1.375" onclick="selectOption('actividad','1.375',this)">
+      <span class="opt-icon">🚶</span>
+      <span class="opt-label">Ligeramente activo</span>
+      <span class="opt-desc">Ejercicio suave 1–3 días por semana</span>
+    </button>
+    <button class="option-btn" data-val="1.55" onclick="selectOption('actividad','1.55',this)">
+      <span class="opt-icon">🏃</span>
+      <span class="opt-label">Moderadamente activo</span>
+      <span class="opt-desc">Ejercicio moderado 3–5 días por semana</span>
+    </button>
+    <button class="option-btn" data-val="1.725" onclick="selectOption('actividad','1.725',this)">
+      <span class="opt-icon">🏋️</span>
+      <span class="opt-label">Muy activo</span>
+      <span class="opt-desc">Ejercicio intenso 6–7 días por semana</span>
+    </button>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="btn-primary" id="btn-3" onclick="goTo(4)" disabled>Continuar</button>
+    <button class="btn-back" onclick="goTo(2)">← Volver</button>
+  </div>
+</div>
+
+<!-- PASO 4 — Entorno de entrenamiento -->
+<div class="card" id="step-4">
+  <span class="step-eyebrow">Paso 4</span>
+  <h2 class="step-title">¿Dónde entrenas?</h2>
+  <p class="step-sub">Esto define qué tipo de rutinas te asignamos.</p>
+
+  <div class="options" id="opts-entorno">
+    <button class="option-btn" data-val="gimnasio" onclick="selectOption('entorno','gimnasio',this)">
+      <span class="opt-icon">🏟️</span>
+      <span class="opt-label">Gimnasio</span>
+      <span class="opt-desc">Acceso a máquinas y pesas</span>
+    </button>
+    <button class="option-btn" data-val="casa" onclick="selectOption('entorno','casa',this)">
+      <span class="opt-icon">🏠</span>
+      <span class="opt-label">En casa</span>
+      <span class="opt-desc">Peso corporal o equipo básico</span>
+    </button>
+    <button class="option-btn" data-val="ambos" onclick="selectOption('entorno','ambos',this)" style="grid-column:span 2;">
+      <span class="opt-icon">🔄</span>
+      <span class="opt-label">Ambos según el día</span>
+      <span class="opt-desc">Rutinas adaptables a cada entorno</span>
+    </button>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="btn-primary" id="btn-4" onclick="goTo(5)" disabled>Continuar</button>
+    <button class="btn-back" onclick="goTo(3)">← Volver</button>
+  </div>
+</div>
+
+<!-- PASO 5 — Preferencia alimentaria -->
+<div class="card" id="step-5">
+  <span class="step-eyebrow">Paso 5</span>
+  <h2 class="step-title">¿Tienes alguna preferencia alimentaria?</h2>
+  <p class="step-sub">Usamos esto para adaptar los planes de comida a lo que puedes comer.</p>
+
+  <div class="options" id="opts-dieta">
+    <button class="option-btn" data-val="ninguna" onclick="selectOption('dieta','ninguna',this)">
+      <span class="opt-icon">🍽️</span>
+      <span class="opt-label">Sin restricción</span>
+      <span class="opt-desc">Como de todo</span>
+    </button>
+    <button class="option-btn" data-val="vegetariano" onclick="selectOption('dieta','vegetariano',this)">
+      <span class="opt-icon">🥦</span>
+      <span class="opt-label">Vegetariano</span>
+      <span class="opt-desc">Sin carne ni pescado</span>
+    </button>
+    <button class="option-btn" data-val="vegano" onclick="selectOption('dieta','vegano',this)">
+      <span class="opt-icon">🌱</span>
+      <span class="opt-label">Vegano</span>
+      <span class="opt-desc">Sin productos de origen animal</span>
+    </button>
+    <button class="option-btn" data-val="singluten" onclick="selectOption('dieta','singluten',this)">
+      <span class="opt-icon">🌾</span>
+      <span class="opt-label">Sin gluten</span>
+      <span class="opt-desc">Intolerancia al gluten o celiaquía</span>
+    </button>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="btn-primary" id="btn-5" onclick="calcularYMostrar()" disabled>Ver mis resultados →</button>
+    <button class="btn-back" onclick="goTo(4)">← Volver</button>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div class="card" id="step-result">
+  <div class="result-header">
+    <span class="result-name" id="res-nombre"></span>
+    <span class="result-tagline" id="res-tagline"></span>
+  </div>
+
+  <div>
+    <p style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Tus métricas base</p>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-label">Calorías / día</span>
+        <span class="metric-value" id="res-calorias">—</span>
+        <span class="metric-unit">kcal objetivo</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">TMB</span>
+        <span class="metric-value" id="res-tmb">—</span>
+        <span class="metric-unit">kcal en reposo</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">IMC</span>
+        <span class="metric-value" id="res-imc">—</span>
+        <span class="metric-unit" id="res-imc-cat">—</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">FC Máxima</span>
+        <span class="metric-value" id="res-fc">—</span>
+        <span class="metric-unit">lpm estimados</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Macros diarios sugeridos</p>
+    <div class="macros-row">
+      <div class="macro-pill prot">
+        <span class="macro-g" id="res-prot">—</span>
+        <span class="macro-name">Proteína (g)</span>
+      </div>
+      <div class="macro-pill carb">
+        <span class="macro-g" id="res-carb">—</span>
+        <span class="macro-name">Carbos (g)</span>
+      </div>
+      <div class="macro-pill fat">
+        <span class="macro-g" id="res-fat">—</span>
+        <span class="macro-name">Grasas (g)</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Índice de Masa Corporal</p>
+    <div class="imc-bar-wrap">
+      <div class="imc-bar-track">
+        <div class="imc-marker" id="imcMarker" style="left:0%"></div>
+      </div>
+      <div class="imc-labels">
+        <span>Bajo peso</span>
+        <span>Normal</span>
+        <span>Sobrepeso</span>
+        <span>Obesidad</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="guardarYContinuar()">Guardar perfil y continuar →</button>
+  <button class="btn-back" onclick="goTo(5)">← Editar respuestas</button>
+</div>
+
+<script>
+  const profile = {
+    objetivo: null, nombre: '', edad: null, sexo: null,
+    peso: null, altura: null, actividad: null, entorno: null, dieta: null
+  };
+
+  function startOnboarding() {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('topbar').style.display = 'flex';
+    goTo(1);
+  }
+
+  function goTo(step) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    const target = document.getElementById(step === 'result' ? 'step-result' : `step-${step}`);
+    if (target) target.classList.add('active');
+
+    if (typeof step === 'number') {
+      const pct = (step / 5) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressLabel').textContent = `${step} de 5`;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function selectOption(field, val, btn) {
+    profile[field] = val;
+    const container = btn.closest('.options');
+    container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const stepMap = { objetivo: 1, actividad: 3, entorno: 4, dieta: 5 };
+    const btnId = `btn-${stepMap[field]}`;
+    document.getElementById(btnId).disabled = false;
+  }
+
+  function selectSex(val) {
+    profile.sexo = val;
+    document.getElementById('btn-hombre').classList.toggle('selected', val === 'hombre');
+    document.getElementById('btn-mujer').classList.toggle('selected', val === 'mujer');
+    validateStep2();
+  }
+
+  function validateStep2() {
+    const nombre = document.getElementById('input-nombre').value.trim();
+    const edad = parseInt(document.getElementById('input-edad').value);
+    const peso = parseFloat(document.getElementById('input-peso').value);
+    const altura = parseFloat(document.getElementById('input-altura').value);
+    const valid = nombre.length > 1 && edad >= 14 && edad <= 99 &&
+                  peso >= 30 && peso <= 300 && altura >= 100 && altura <= 250 && profile.sexo;
+    document.getElementById('btn-2').disabled = !valid;
+    if (valid) {
+      profile.nombre = nombre;
+      profile.edad = edad;
+      profile.peso = peso;
+      profile.altura = altura;
+    }
+  }
+
+  function calcularTMB() {
+    const { peso, altura, edad, sexo } = profile;
+    const base = (10 * peso) + (6.25 * altura) - (5 * edad);
+    return sexo === 'hombre' ? base + 5 : base - 161;
+  }
+
+  function calcularIMC() {
+    const alturaM = profile.altura / 100;
+    return profile.peso / (alturaM * alturaM);
+  }
+
+  function categoriaIMC(imc) {
+    if (imc < 18.5) return 'Bajo peso';
+    if (imc < 25)   return 'Normal ✓';
+    if (imc < 30)   return 'Sobrepeso';
+    return 'Obesidad';
+  }
+
+  function calcularMacros(calorias, peso, objetivo) {
+    let protRatio, carbRatio, fatRatio;
+    if (objetivo === 'corte')          { protRatio = 2.4; carbRatio = 2.5; fatRatio = 0.9; }
+    else if (objetivo === 'volumen')   { protRatio = 2.0; carbRatio = 5.5; fatRatio = 1.2; }
+    else                               { protRatio = 2.0; carbRatio = 4.0; fatRatio = 1.0; }
+
+    const prot = Math.round(protRatio * peso);
+    const fat  = Math.round(fatRatio * peso);
+    const carbCals = calorias - (prot * 4) - (fat * 9);
+    const carb = Math.round(Math.max(carbCals / 4, 50));
+    return { prot, carb, fat };
+  }
+
+  function calcularYMostrar() {
+    profile.nombre  = document.getElementById('input-nombre').value.trim();
+    profile.edad    = parseInt(document.getElementById('input-edad').value);
+    profile.peso    = parseFloat(document.getElementById('input-peso').value);
+    profile.altura  = parseFloat(document.getElementById('input-altura').value);
+
+    const tmb    = Math.round(calcularTMB());
+    const tdee   = Math.round(tmb * parseFloat(profile.actividad));
+    const ajuste = profile.objetivo === 'corte' ? -400 : profile.objetivo === 'volumen' ? +350 : 0;
+    const calorias = tdee + ajuste;
+    const imc    = calcularIMC();
+    const fc     = Math.round(207 - 0.7 * profile.edad);
+    const macros = calcularMacros(calorias, profile.peso, profile.objetivo);
+    const objLabel = { corte: 'Pérdida de grasa', volumen: 'Ganancia muscular', mantenimiento: 'Mantenimiento' };
+
+    document.getElementById('res-nombre').textContent  = `Hola, ${profile.nombre} 👋`;
+    document.getElementById('res-tagline').textContent = `Objetivo: ${objLabel[profile.objetivo]} · ${profile.entorno === 'gimnasio' ? 'Gimnasio' : profile.entorno === 'casa' ? 'Casa' : 'Gimnasio + Casa'}`;
+    document.getElementById('res-calorias').textContent = calorias.toLocaleString();
+    document.getElementById('res-tmb').textContent      = tmb.toLocaleString();
+    document.getElementById('res-imc').textContent      = imc.toFixed(1);
+    document.getElementById('res-imc-cat').textContent  = categoriaIMC(imc);
+    document.getElementById('res-fc').textContent       = fc;
+    document.getElementById('res-prot').textContent     = macros.prot;
+    document.getElementById('res-carb').textContent     = macros.carb;
+    document.getElementById('res-fat').textContent      = macros.fat;
+
+    // IMC marker position (scale 14–40)
+    const pct = Math.min(Math.max(((imc - 14) / 26) * 100, 2), 98);
+    document.getElementById('imcMarker').style.left = pct + '%';
+
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressLabel').textContent = '✓ Completo';
+
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.getElementById('step-result').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Guardar en localStorage
+    const data = { ...profile, tmb, tdee, calorias, imc: imc.toFixed(1), fc, macros, fechaCreacion: new Date().toISOString() };
+    localStorage.setItem('vitacore_perfil', JSON.stringify(data));
+  }
+
+  function guardarYContinuar() {
+    alert('✅ Perfil guardado. El Dashboard llega en la próxima versión de VitaCore.');
+  }
+
+  // Si ya hay perfil guardado, ofrecer continuar
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem('vitacore_perfil');
+    if (saved) {
+      const p = JSON.parse(saved);
+      const continuar = confirm(`Bienvenido de nuevo, ${p.nombre}. ¿Quieres ver tu perfil guardado?`);
+      if (continuar) {
+        Object.assign(profile, p);
+        calcularYMostrar();
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('topbar').style.display = 'flex';
+      }
+    }
+  });
+</script>
+</body>
+</html>

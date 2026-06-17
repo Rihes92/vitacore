@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitaCore — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0D0F14;
+      --surface: #161A22;
+      --surface2: #1E2430;
+      --accent: #00E5A0;
+      --accent2: #0057FF;
+      --text: #F0F2F5;
+      --muted: #7A8499;
+      --border: #262D3D;
+      --danger: #FF4D6D;
+      --warning: #FFD600;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 88px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      padding: 20px 20px 0;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left {}
+    .greeting {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .username {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo-small {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .logo-small span { color: var(--accent); }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── OBJETIVO BANNER ── */
+    .objetivo-banner {
+      background: linear-gradient(135deg, rgba(0,229,160,0.12) 0%, rgba(0,87,255,0.10) 100%);
+      border: 1.5px solid rgba(0,229,160,0.2);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .obj-icon { font-size: 28px; }
+    .obj-info { flex: 1; }
+    .obj-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .obj-name  { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--accent); }
+    .obj-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .obj-day   {
+      background: rgba(0,229,160,0.12);
+      border-radius: 8px;
+      padding: 8px 12px;
+      text-align: center;
+    }
+    .obj-day-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .obj-day-lbl { font-size: 10px; color: var(--muted); }
+
+    /* ── CALORIAS RING ── */
+    .calorias-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .ring-wrap { position: relative; width: 96px; height: 96px; flex-shrink: 0; }
+    .ring-svg { width: 96px; height: 96px; transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: var(--border); stroke-width: 8; }
+    .ring-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round;
+                 stroke-dasharray: 251.2; stroke-dashoffset: 251.2;
+                 transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1); }
+    .ring-center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ring-val  { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; line-height: 1; }
+    .ring-lbl  { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+    .cals-detail { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .cals-title  { font-size: 13px; font-weight: 700; color: var(--text); }
+    .cals-row    { display: flex; justify-content: space-between; align-items: center; }
+    .cals-item   { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .cals-num    { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
+    .cals-lbl    { font-size: 10px; color: var(--muted); }
+    .cals-sep    { width: 1px; height: 32px; background: var(--border); }
+
+    /* ── MACROS BAR ── */
+    .macros-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title-sub { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+    .macro-bar-row { display: flex; flex-direction: column; gap: 5px; }
+    .macro-bar-header { display: flex; justify-content: space-between; }
+    .macro-bar-name   { font-size: 12px; font-weight: 600; }
+    .macro-bar-vals   { font-size: 12px; color: var(--muted); }
+    .macro-bar-track  {
+      height: 6px; background: var(--border);
+      border-radius: 99px; overflow: hidden;
+    }
+    .macro-bar-fill {
+      height: 100%; border-radius: 99px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+
+    /* ── AGUA ── */
+    .agua-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .agua-vasos {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .vaso {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer;
+      transition: all 0.15s;
+      filter: grayscale(1) opacity(0.4);
+    }
+    .vaso.lleno {
+      background: rgba(0,87,255,0.15);
+      border-color: var(--accent2);
+      filter: none;
+    }
+    .agua-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .agua-val  { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent2); }
+    .agua-meta { font-size: 12px; color: var(--muted); }
+    .agua-reset {
+      font-size: 11px; color: var(--muted);
+      background: none; border: none;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer; padding: 2px 6px;
+    }
+    .agua-reset:hover { color: var(--text); }
+
+    /* ── MÉTRICAS RÁPIDAS ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .metric-mini {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .metric-mini-icon { font-size: 18px; }
+    .metric-mini-val  {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800;
+      color: var(--accent);
+    }
+    .metric-mini-lbl  { font-size: 11px; color: var(--muted); }
+
+    /* ── RESUMEN SEMANAL ── */
+    .semana-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dias-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .dia-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .dia-lbl { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .dia-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .dia-dot.completo { background: rgba(0,229,160,0.15); border-color: var(--accent); }
+    .dia-dot.hoy      { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,229,160,0.2); }
+    .dia-dot.futuro   { opacity: 0.3; }
+
+    /* ── ACCIONES RÁPIDAS ── */
+    .acciones-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .accion-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .accion-btn:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+    .accion-icon { font-size: 22px; }
+    .accion-label { font-size: 13px; font-weight: 700; color: var(--text); }
+    .accion-sub   { font-size: 11px; color: var(--muted); }
+
+    /* ── REGISTRO RÁPIDO MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 20px 20px 36px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: slideModal 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes slideModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 800;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 20px; cursor: pointer; padding: 2px 6px;
+    }
+    .modal-fields { display: flex; flex-direction: column; gap: 10px; }
+    .modal-field  { display: flex; flex-direction: column; gap: 5px; }
+    .modal-label  { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .modal-input  {
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 15px;
+      padding: 11px 12px; width: 100%;
+      -webkit-appearance: none;
+    }
+    .modal-input:focus { outline: none; border-color: var(--accent); }
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-modal-save {
+      width: 100%; padding: 14px;
+      background: var(--accent); color: #0D0F14;
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-modal-save:hover { filter: brightness(1.08); }
+
+    /* ── ALERTA SIN PERFIL ── */
+    .no-perfil {
+      background: rgba(255,77,109,0.08);
+      border: 1.5px solid rgba(255,77,109,0.25);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .no-perfil-icon { font-size: 24px; }
+    .no-perfil-text { flex: 1; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .no-perfil-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+    .btn-ir-perfil {
+      padding: 8px 14px; background: var(--accent); color: #0D0F14;
+      border: none; border-radius: 8px;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(13,15,20,0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 12px; z-index: 20;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; padding: 4px 12px; border-radius: 8px;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface2); }
+    .nav-icon  { font-size: 20px; filter: grayscale(1) opacity(0.5); }
+    .nav-item.active .nav-icon  { filter: none; }
+    .nav-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .nav-item.active .nav-label { color: var(--accent); }
+
+    /* ── FECHA ── */
+    .fecha-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 5px 12px;
+      font-size: 12px; color: var(--muted);
+    }
+    .fecha-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<div class="header">
+  <div class="header-left">
+    <div class="greeting" id="greeting">Buenos días</div>
+    <div class="username" id="username">VitaCore</div>
+  </div>
+  <div class="logo-small">Vita<span>Core</span></div>
+</div>
+
+<div class="page">
+
+  <!-- ALERTA SIN PERFIL -->
+  <div class="no-perfil" id="noPerfil" style="display:none;">
+    <span class="no-perfil-icon">⚠️</span>
+    <div class="no-perfil-text">
+      <strong>Completa tu perfil primero</strong>
+      Responde el quiz de 5 preguntas para activar el dashboard.
+    </div>
+    <button class="btn-ir-perfil" onclick="window.location.href='vitacore-onboarding.html'">Empezar</button>
+  </div>
+
+  <!-- FECHA -->
+  <div>
+    <div class="fecha-chip">
+      <div class="fecha-dot"></div>
+      <span id="fechaHoy">—</span>
+    </div>
+  </div>
+
+  <!-- OBJETIVO BANNER -->
+  <div class="objetivo-banner">
+    <span class="obj-icon" id="obj-icon">🎯</span>
+    <div class="obj-info">
+      <div class="obj-label">Tu objetivo</div>
+      <div class="obj-name" id="obj-name">—</div>
+      <div class="obj-meta" id="obj-meta">—</div>
+    </div>
+    <div class="obj-day">
+      <div class="obj-day-num" id="obj-day-num">1</div>
+      <div class="obj-day-lbl">día</div>
+    </div>
+  </div>
+
+  <!-- CALORÍAS RING -->
+  <div class="calorias-card">
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 96 96">
+        <circle class="ring-bg" cx="48" cy="48" r="40"/>
+        <circle class="ring-fill" id="ringFill" cx="48" cy="48" r="40"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-val" id="ring-restantes">—</div>
+        <div class="ring-lbl">restantes</div>
+      </div>
+    </div>
+    <div class="cals-detail">
+      <div class="cals-title">Calorías de hoy</div>
+      <div class="cals-row">
+        <div class="cals-item">
+          <div class="cals-num" id="cals-meta" style="color:var(--accent)">—</div>
+          <div class="cals-lbl">meta</div>
+        </div>
+        <div class="cals-sep"></div>
+        <div class="cals-item">
+          <div class="cals-num" id="cals-consumidas" style="color:var(--warning)">0</div>
+          <div class="cals-lbl">consumidas</div>
+        </div>
+        <div class="cals-sep"></div>
+        <div class="cals-item">
+          <div class="cals-num" id="cals-quemadas" style="color:var(--danger)">0</div>
+          <div class="cals-lbl">ejercicio</div>
+        </div>
+      </div>
+      <button class="btn-modal-save" style="padding:10px;font-size:12px;" onclick="abrirModal('calorias')">+ Registrar comida</button>
+    </div>
+  </div>
+
+  <!-- MACROS -->
+  <div class="macros-card">
+    <div class="card-title">
+      Macros de hoy
+      <span class="card-title-sub" id="macros-sub">— / — / —</span>
+    </div>
+    <div class="macro-bar-row">
+      <div class="macro-bar-header">
+        <span class="macro-bar-name" style="color:var(--accent)">Proteína</span>
+        <span class="macro-bar-vals" id="bar-prot-vals">0 / — g</span>
+      </div>
+      <div class="macro-bar-track">
+        <div class="macro-bar-fill" id="bar-prot" style="background:var(--accent)"></div>
+      </div>
+    </div>
+    <div class="macro-bar-row">
+      <div class="macro-bar-header">
+        <span class="macro-bar-name" style="color:var(--accent2)">Carbohidratos</span>
+        <span class="macro-bar-vals" id="bar-carb-vals">0 / — g</span>
+      </div>
+      <div class="macro-bar-track">
+        <div class="macro-bar-fill" id="bar-carb" style="background:var(--accent2)"></div>
+      </div>
+    </div>
+    <div class="macro-bar-row">
+      <div class="macro-bar-header">
+        <span class="macro-bar-name" style="color:var(--danger)">Grasas</span>
+        <span class="macro-bar-vals" id="bar-fat-vals">0 / — g</span>
+      </div>
+      <div class="macro-bar-track">
+        <div class="macro-bar-fill" id="bar-fat" style="background:var(--danger)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGUA -->
+  <div class="agua-card">
+    <div class="card-title">
+      Hidratación
+      <button class="agua-reset" onclick="resetAgua()">Reiniciar</button>
+    </div>
+    <div class="agua-info">
+      <div>
+        <div class="agua-val" id="agua-val">0 ml</div>
+        <div class="agua-meta" id="agua-meta">Meta: 2000 ml</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);">Toca un vaso para registrar</div>
+    </div>
+    <div class="agua-vasos" id="aguaVasos"></div>
+  </div>
+
+  <!-- MÉTRICAS RÁPIDAS -->
+  <div class="metrics-row">
+    <div class="metric-mini">
+      <span class="metric-mini-icon">⚖️</span>
+      <div class="metric-mini-val" id="met-imc">—</div>
+      <div class="metric-mini-lbl">IMC actual</div>
+    </div>
+    <div class="metric-mini">
+      <span class="metric-mini-icon">❤️</span>
+      <div class="metric-mini-val" id="met-fc">—</div>
+      <div class="metric-mini-lbl">FC Máxima</div>
+    </div>
+    <div class="metric-mini">
+      <span class="metric-mini-icon">🔥</span>
+      <div class="metric-mini-val" id="met-tmb">—</div>
+      <div class="metric-mini-lbl">TMB kcal</div>
+    </div>
+    <div class="metric-mini">
+      <span class="metric-mini-icon">💪</span>
+      <div class="metric-mini-val" id="met-macros">—</div>
+      <div class="metric-mini-lbl">Proteína meta (g)</div>
+    </div>
+  </div>
+
+  <!-- RESUMEN SEMANAL -->
+  <div class="semana-card">
+    <div class="card-title">Esta semana</div>
+    <div class="dias-row" id="diasRow"></div>
+  </div>
+
+  <!-- ACCIONES RÁPIDAS -->
+  <div class="acciones-grid">
+    <a class="accion-btn" href="vitacore-calculadoras.html">
+      <span class="accion-icon">🔬</span>
+      <span class="accion-label">Calculadoras</span>
+      <span class="accion-sub">TMB, IMC, macros, grasa</span>
+    </a>
+    <a class="accion-btn" href="vitacore-progreso.html">
+      <span class="accion-icon">📈</span>
+      <span class="accion-label">Mi Progreso</span>
+      <span class="accion-sub">Peso y medidas</span>
+    </a>
+    <div class="accion-btn" onclick="abrirModal('ejercicio')">
+      <span class="accion-icon">🏃</span>
+      <span class="accion-label">Registrar ejercicio</span>
+      <span class="accion-sub">Calorías quemadas</span>
+    </div>
+    <a class="accion-btn" href="vitacore-onboarding.html">
+      <span class="accion-icon">⚙️</span>
+      <span class="accion-label">Editar perfil</span>
+      <span class="accion-sub">Cambiar objetivo o datos</span>
+    </a>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ════ MODAL REGISTRO COMIDA ════ -->
+<div class="modal-overlay" id="modal-calorias" onclick="cerrarModal('calorias')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      Registrar comida
+      <button class="modal-close" onclick="cerrarModal('calorias')">✕</button>
+    </div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label class="modal-label">Descripción (opcional)</label>
+        <input type="text" class="modal-input" id="food-desc" placeholder="ej. Arroz con pollo" />
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Calorías (kcal)</label>
+          <input type="number" class="modal-input" id="food-cals" placeholder="450" min="0" max="3000" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Proteína (g)</label>
+          <input type="number" class="modal-input" id="food-prot" placeholder="30" min="0" max="300" />
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Carbos (g)</label>
+          <input type="number" class="modal-input" id="food-carb" placeholder="50" min="0" max="500" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Grasas (g)</label>
+          <input type="number" class="modal-input" id="food-fat" placeholder="15" min="0" max="200" />
+        </div>
+      </div>
+    </div>
+    <button class="btn-modal-save" onclick="guardarComida()">Guardar</button>
+  </div>
+</div>
+
+<!-- ════ MODAL EJERCICIO ════ -->
+<div class="modal-overlay" id="modal-ejercicio" onclick="cerrarModal('ejercicio')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      Registrar ejercicio
+      <button class="modal-close" onclick="cerrarModal('ejercicio')">✕</button>
+    </div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label class="modal-label">Actividad</label>
+        <input type="text" class="modal-input" id="ej-desc" placeholder="ej. Pesas, cardio, correr..." />
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Calorías quemadas</label>
+          <input type="number" class="modal-input" id="ej-cals" placeholder="300" min="0" max="3000" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Duración (min)</label>
+          <input type="number" class="modal-input" id="ej-mins" placeholder="45" min="0" max="300" />
+        </div>
+      </div>
+    </div>
+    <button class="btn-modal-save" onclick="guardarEjercicio()">Guardar</button>
+  </div>
+</div>
+
+<!-- ════ NAVBAR ════ -->
+<nav class="navbar">
+  <a class="nav-item active" href="vitacore-dashboard.html">
+    <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+  </a>
+  <a class="nav-item" href="vitacore-calculadoras.html">
+    <span class="nav-icon">🔬</span><span class="nav-label">Calcular</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">🥗</span><span class="nav-label">Nutrición</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">💪</span><span class="nav-label">Entrena</span>
+  </a>
+  <a class="nav-item" href="vitacore-progreso.html">
+    <span class="nav-icon">📈</span><span class="nav-label">Progreso</span>
+  </a>
+</nav>
+
+<script>
+  // ── UTILIDADES ──
+  const hoy = () => new Date().toISOString().split('T')[0];
+
+  function getPerfil() {
+    try { return JSON.parse(localStorage.getItem('vitacore_perfil')) || null; }
+    catch(e) { return null; }
+  }
+
+  function getDayData() {
+    const key = `vitacore_dia_${hoy()}`;
+    try { return JSON.parse(localStorage.getItem(key)) || { cals: 0, prot: 0, carb: 0, fat: 0, ejercicio: 0, agua: 0 }; }
+    catch(e) { return { cals: 0, prot: 0, carb: 0, fat: 0, ejercicio: 0, agua: 0 }; }
+  }
+
+  function saveDayData(data) {
+    localStorage.setItem(`vitacore_dia_${hoy()}`, JSON.stringify(data));
+  }
+
+  function getWeekLog() {
+    try { return JSON.parse(localStorage.getItem('vitacore_semana')) || []; }
+    catch(e) { return []; }
+  }
+
+  // ── SALUDO ──
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Buenos días';
+    if (h < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  // ── FECHA ──
+  function formatFecha() {
+    const d = new Date();
+    const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]}`;
+  }
+
+  // ── RING CALORÍAS ──
+  function updateRing(consumidas, meta) {
+    const pct   = Math.min(consumidas / meta, 1);
+    const circ  = 2 * Math.PI * 40;
+    const offset = circ * (1 - pct);
+    const ring  = document.getElementById('ringFill');
+    ring.style.strokeDashoffset = offset;
+    const restantes = Math.max(meta - consumidas, 0);
+    document.getElementById('ring-restantes').textContent = restantes.toLocaleString();
+    ring.style.stroke = pct > 1 ? 'var(--danger)' : pct > 0.85 ? 'var(--warning)' : 'var(--accent)';
+  }
+
+  // ── BARRAS MACROS ──
+  function updateMacros(data, perfil) {
+    const macros = perfil?.macros || { prot: 150, carb: 250, fat: 60 };
+    [
+      ['prot', data.prot, macros.prot, 'bar-prot'],
+      ['carb', data.carb, macros.carb, 'bar-carb'],
+      ['fat',  data.fat,  macros.fat,  'bar-fat'],
+    ].forEach(([key, val, meta, barId]) => {
+      const pct = Math.min((val / meta) * 100, 100);
+      document.getElementById(barId).style.width = pct + '%';
+      document.getElementById(`bar-${key}-vals`).textContent = `${val} / ${meta} g`;
+    });
+    document.getElementById('macros-sub').textContent =
+      `P: ${data.prot}g · C: ${data.carb}g · G: ${data.fat}g`;
+  }
+
+  // ── AGUA ──
+  const VASOS_TOTAL = 8;
+  const ML_POR_VASO = 250;
+
+  function renderAgua(vasosLlenos) {
+    const container = document.getElementById('aguaVasos');
+    container.innerHTML = '';
+    for (let i = 0; i < VASOS_TOTAL; i++) {
+      const div = document.createElement('div');
+      div.className = 'vaso' + (i < vasosLlenos ? ' lleno' : '');
+      div.textContent = '💧';
+      div.onclick = () => toggleVaso(i);
+      container.appendChild(div);
+    }
+    const ml = vasosLlenos * ML_POR_VASO;
+    document.getElementById('agua-val').textContent  = `${ml} ml`;
+    document.getElementById('agua-meta').textContent = `Meta: ${VASOS_TOTAL * ML_POR_VASO} ml`;
+  }
+
+  function toggleVaso(idx) {
+    const data = getDayData();
+    const actual = data.agua || 0;
+    // Si toco un vaso lleno que es el último, lo vacío; si toco uno vacío, lleno hasta ese
+    data.agua = (idx < actual) ? idx : idx + 1;
+    saveDayData(data);
+    renderAgua(data.agua);
+  }
+
+  function resetAgua() {
+    const data = getDayData();
+    data.agua = 0;
+    saveDayData(data);
+    renderAgua(0);
+  }
+
+  // ── SEMANA ──
+  function renderSemana() {
+    const dias = ['L','M','X','J','V','S','D'];
+    const hoyIdx = (new Date().getDay() + 6) % 7; // 0=lunes
+    const container = document.getElementById('diasRow');
+    container.innerHTML = '';
+    dias.forEach((d, i) => {
+      const dateObj = new Date();
+      const diff = i - hoyIdx;
+      dateObj.setDate(dateObj.getDate() + diff);
+      const dateKey = dateObj.toISOString().split('T')[0];
+      const dayData = (() => { try { return JSON.parse(localStorage.getItem(`vitacore_dia_${dateKey}`)); } catch(e){ return null; } })();
+      const completo = dayData && dayData.cals > 0;
+      const esHoy    = i === hoyIdx;
+      const esFuturo = i > hoyIdx;
+
+      const item = document.createElement('div');
+      item.className = 'dia-item';
+      item.innerHTML = `
+        <div class="dia-lbl">${d}</div>
+        <div class="dia-dot ${completo ? 'completo' : ''} ${esHoy ? 'hoy' : ''} ${esFuturo ? 'futuro' : ''}">
+          ${completo ? '✓' : esHoy ? '·' : ''}
+        </div>`;
+      container.appendChild(item);
+    });
+  }
+
+  // ── DÍAS DESDE INICIO ──
+  function diasDesdeInicio(perfil) {
+    if (!perfil?.fechaCreacion) return 1;
+    const inicio = new Date(perfil.fechaCreacion);
+    const ahora  = new Date();
+    return Math.max(1, Math.floor((ahora - inicio) / (1000 * 60 * 60 * 24)) + 1);
+  }
+
+  // ── MODALES ──
+  function abrirModal(tipo)  { document.getElementById(`modal-${tipo}`).classList.add('show'); }
+  function cerrarModal(tipo) { document.getElementById(`modal-${tipo}`).classList.remove('show'); }
+
+  function guardarComida() {
+    const cals = parseFloat(document.getElementById('food-cals').value) || 0;
+    const prot = parseFloat(document.getElementById('food-prot').value) || 0;
+    const carb = parseFloat(document.getElementById('food-carb').value) || 0;
+    const fat  = parseFloat(document.getElementById('food-fat').value) || 0;
+    if (!cals) { alert('Ingresa al menos las calorías.'); return; }
+    const data = getDayData();
+    data.cals += cals; data.prot += prot; data.carb += carb; data.fat += fat;
+    saveDayData(data);
+    cerrarModal('calorias');
+    ['food-cals','food-prot','food-carb','food-fat','food-desc'].forEach(id => document.getElementById(id).value = '');
+    init();
+  }
+
+  function guardarEjercicio() {
+    const cals = parseFloat(document.getElementById('ej-cals').value) || 0;
+    if (!cals) { alert('Ingresa las calorías quemadas.'); return; }
+    const data = getDayData();
+    data.ejercicio = (data.ejercicio || 0) + cals;
+    saveDayData(data);
+    cerrarModal('ejercicio');
+    ['ej-cals','ej-mins','ej-desc'].forEach(id => document.getElementById(id).value = '');
+    init();
+  }
+
+  // ── INIT ──
+  function init() {
+    const perfil = getPerfil();
+    const data   = getDayData();
+
+    document.getElementById('greeting').textContent = getGreeting();
+    document.getElementById('fechaHoy').textContent = formatFecha();
+
+    if (!perfil) {
+      document.getElementById('noPerfil').style.display = 'flex';
+      document.getElementById('username').textContent = 'Bienvenido';
+      return;
+    }
+
+    document.getElementById('noPerfil').style.display = 'none';
+    document.getElementById('username').textContent = perfil.nombre || 'Atleta';
+
+    // Objetivo
+    const objMap = {
+      corte:          { icon: '🔥', name: 'Perder grasa', meta: `${perfil.calorias || '—'} kcal/día` },
+      volumen:        { icon: '💪', name: 'Ganar músculo', meta: `${perfil.calorias || '—'} kcal/día` },
+      mantenimiento:  { icon: '⚖️', name: 'Mantenimiento', meta: `${perfil.calorias || '—'} kcal/día` },
+    };
+    const obj = objMap[perfil.objetivo] || objMap.mantenimiento;
+    document.getElementById('obj-icon').textContent    = obj.icon;
+    document.getElementById('obj-name').textContent    = obj.name;
+    document.getElementById('obj-meta').textContent    = obj.meta;
+    document.getElementById('obj-day-num').textContent = diasDesdeInicio(perfil);
+
+    // Calorías
+    const meta = perfil.calorias || 2000;
+    const consumidas = data.cals || 0;
+    const quemadas   = data.ejercicio || 0;
+    document.getElementById('cals-meta').textContent      = meta.toLocaleString();
+    document.getElementById('cals-consumidas').textContent = consumidas.toLocaleString();
+    document.getElementById('cals-quemadas').textContent   = quemadas.toLocaleString();
+    setTimeout(() => updateRing(consumidas - quemadas, meta), 100);
+
+    // Macros
+    updateMacros(data, perfil);
+
+    // Agua
+    renderAgua(data.agua || 0);
+
+    // Métricas rápidas
+    const altM = (perfil.altura || 170) / 100;
+    const imc  = ((perfil.peso || 70) / (altM * altM)).toFixed(1);
+    const fc   = Math.round(207 - 0.7 * (perfil.edad || 25));
+    const tmb  = (() => {
+      const b = (10 * (perfil.peso||70)) + (6.25 * (perfil.altura||170)) - (5 * (perfil.edad||25));
+      return Math.round(perfil.sexo === 'hombre' ? b + 5 : b - 161);
+    })();
+    document.getElementById('met-imc').textContent   = imc;
+    document.getElementById('met-fc').textContent    = fc + ' lpm';
+    document.getElementById('met-tmb').textContent   = tmb.toLocaleString();
+    document.getElementById('met-macros').textContent = (perfil.macros?.prot || '—') + 'g';
+
+    // Semana
+    renderSemana();
+  }
+
+  init();
+</script>
+</body>
+</html>

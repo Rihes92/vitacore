@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitaCore — Mi Progreso</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0D0F14;
+      --surface: #161A22;
+      --surface2: #1E2430;
+      --accent: #00E5A0;
+      --accent2: #0057FF;
+      --text: #F0F2F5;
+      --muted: #7A8499;
+      --border: #262D3D;
+      --danger: #FF4D6D;
+      --warning: #FFD600;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 88px;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(13,15,20,0.92);
+      backdrop-filter: blur(12px);
+      padding: 16px 20px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      max-width: 100%;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .logo span { color: var(--accent); }
+    .topbar-title { font-size: 14px; color: var(--muted); }
+
+    /* ── PAGE ── */
+    .page { max-width: 480px; margin: 0 auto; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .card-title {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .card-action {
+      font-size: 12px; color: var(--accent);
+      background: none; border: none;
+      font-family: 'Inter', sans-serif; font-weight: 600;
+      cursor: pointer; padding: 2px 0;
+    }
+
+    /* ── RESUMEN SUPERIOR ── */
+    .resumen-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+    }
+    .resumen-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 10px; text-align: center;
+    }
+    .resumen-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); }
+    .resumen-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .resumen-delta { font-size: 11px; margin-top: 3px; font-weight: 600; }
+    .delta-pos { color: var(--danger); }
+    .delta-neg { color: var(--accent); }
+    .delta-neu { color: var(--muted); }
+
+    /* ── GRÁFICA ── */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 180px;
+    }
+    canvas { width: 100% !important; }
+
+    .chart-empty {
+      height: 180px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px;
+      color: var(--muted); font-size: 13px; text-align: center;
+    }
+    .chart-empty-icon { font-size: 32px; }
+
+    /* ── FILTRO PERIODO ── */
+    .periodo-tabs {
+      display: flex; gap: 6px;
+    }
+    .periodo-tab {
+      padding: 5px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 99px; font-size: 12px; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .periodo-tab.active {
+      background: rgba(0,229,160,0.12);
+      border-color: var(--accent); color: var(--accent);
+    }
+
+    /* ── REGISTRO RÁPIDO ── */
+    .registro-form {
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+    .registro-field { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select {
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 15px;
+      padding: 11px 12px; width: 100%; transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+    .btn-registrar {
+      padding: 11px 18px;
+      background: var(--accent); color: #0D0F14;
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-registrar:hover { filter: brightness(1.08); }
+
+    /* ── HISTORIAL ── */
+    .historial-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; }
+    .historial-list::-webkit-scrollbar { width: 4px; }
+    .historial-list::-webkit-scrollbar-track { background: transparent; }
+    .historial-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .historial-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface2); border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+
+    .hist-fecha { font-size: 12px; color: var(--muted); flex: 1; }
+    .hist-peso  { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .hist-delta { font-size: 12px; font-weight: 600; min-width: 44px; text-align: right; }
+    .hist-del   { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 2px 4px; margin-left: 4px; }
+    .hist-del:hover { color: var(--danger); }
+
+    .historial-empty {
+      text-align: center; padding: 24px;
+      color: var(--muted); font-size: 13px;
+    }
+
+    /* ── MEDIDAS CORPORALES ── */
+    .medidas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .medida-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .medida-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .medida-input-wrap { display: flex; align-items: center; gap: 6px; }
+    .medida-input {
+      background: transparent; border: none; border-bottom: 1px solid var(--border);
+      border-radius: 0; color: var(--text);
+      font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+      padding: 4px 0; width: 70px;
+    }
+    .medida-input:focus { outline: none; border-bottom-color: var(--accent); }
+    .medida-unit { font-size: 12px; color: var(--muted); }
+    .medida-prev { font-size: 11px; color: var(--muted); }
+
+    .btn-guardar-medidas {
+      width: 100%; padding: 13px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--accent); cursor: pointer; transition: all 0.15s;
+    }
+    .btn-guardar-medidas:hover { border-color: var(--accent); background: rgba(0,229,160,0.06); }
+
+    /* ── IMC TRACKER ── */
+    .imc-track-row { display: flex; align-items: center; gap: 14px; }
+    .imc-big { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+    .imc-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .imc-cat  { font-size: 14px; font-weight: 700; }
+    .imc-range { font-size: 12px; color: var(--muted); }
+
+    .imc-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .imc-bar-track {
+      height: 8px; border-radius: 99px;
+      background: linear-gradient(90deg, #0057FF 0%, #00E5A0 38%, #FFD600 65%, #FF4D6D 100%);
+      position: relative;
+    }
+    .imc-marker {
+      width: 14px; height: 14px; background: white; border-radius: 50%;
+      border: 2px solid var(--bg); position: absolute; top: 50%;
+      transform: translate(-50%,-50%);
+      transition: left 0.6s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .imc-bar-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
+
+    /* ── PROGRESO FOTO ── */
+    .foto-placeholder {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 24px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .foto-placeholder:hover { border-color: var(--accent); }
+    .foto-icon { font-size: 28px; }
+    .foto-text { font-size: 13px; color: var(--muted); }
+    .foto-sub  { font-size: 11px; color: var(--border); }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(13,15,20,0.96); backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 12px; z-index: 20;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; padding: 4px 12px; border-radius: 8px;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface2); }
+    .nav-icon  { font-size: 20px; filter: grayscale(1) opacity(0.5); }
+    .nav-item.active .nav-icon  { filter: none; }
+    .nav-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .nav-item.active .nav-label { color: var(--accent); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface); border: 1px solid var(--accent);
+      border-radius: 99px; padding: 10px 20px;
+      font-size: 13px; font-weight: 600; color: var(--accent);
+      opacity: 0; transition: all 0.3s; z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Vita<span>Core</span></div>
+  <span class="topbar-title">Mi Progreso</span>
+</div>
+
+<div class="page">
+
+  <!-- RESUMEN SUPERIOR -->
+  <div class="card" style="gap:10px;">
+    <div class="card-title">Resumen de peso</div>
+    <div class="resumen-grid">
+      <div class="resumen-item">
+        <div class="resumen-val" id="res-inicial">—</div>
+        <div class="resumen-lbl">Peso inicial</div>
+        <div class="resumen-delta" id="res-inicial-fecha" style="color:var(--muted);font-size:10px;">—</div>
+      </div>
+      <div class="resumen-item">
+        <div class="resumen-val" id="res-actual">—</div>
+        <div class="resumen-lbl">Peso actual</div>
+        <div class="resumen-delta" id="res-delta">—</div>
+      </div>
+      <div class="resumen-item">
+        <div class="resumen-val" id="res-meta">—</div>
+        <div class="resumen-lbl">Meta estimada</div>
+        <div class="resumen-delta" id="res-semanas" style="color:var(--muted);font-size:10px;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRÁFICA -->
+  <div class="card">
+    <div class="card-title">
+      Evolución del peso
+      <div class="periodo-tabs">
+        <button class="periodo-tab active" onclick="setPeriodo(7,this)">7d</button>
+        <button class="periodo-tab" onclick="setPeriodo(30,this)">30d</button>
+        <button class="periodo-tab" onclick="setPeriodo(90,this)">90d</button>
+        <button class="periodo-tab" onclick="setPeriodo(0,this)">Todo</button>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chartWrap">
+      <div class="chart-empty" id="chartEmpty">
+        <span class="chart-empty-icon">📊</span>
+        <span>Aún no hay registros.<br>Agrega tu primer peso abajo.</span>
+      </div>
+      <canvas id="weightChart" style="display:none;"></canvas>
+    </div>
+  </div>
+
+  <!-- REGISTRO RÁPIDO -->
+  <div class="card">
+    <div class="card-title">Registrar peso de hoy</div>
+    <div class="registro-form">
+      <div class="registro-field">
+        <label>Peso (kg)</label>
+        <input type="number" id="input-peso" placeholder="ej. 72.5" min="30" max="300" step="0.1" />
+      </div>
+      <div class="registro-field" style="max-width:130px;">
+        <label>Fecha</label>
+        <input type="date" id="input-fecha" />
+      </div>
+      <button class="btn-registrar" onclick="registrarPeso()">+ Agregar</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);">💡 Registra en ayunas, cada mañana, para datos consistentes.</p>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="card">
+    <div class="card-title">
+      Historial
+      <button class="card-action" onclick="exportarCSV()">Exportar CSV</button>
+    </div>
+    <div class="historial-list" id="historialList">
+      <div class="historial-empty">Ningún registro todavía.</div>
+    </div>
+  </div>
+
+  <!-- IMC DINÁMICO -->
+  <div class="card">
+    <div class="card-title">Índice de Masa Corporal</div>
+    <div class="imc-track-row">
+      <div class="imc-big" id="imc-val">—</div>
+      <div class="imc-info">
+        <div class="imc-cat"  id="imc-cat">—</div>
+        <div class="imc-range" id="imc-range">—</div>
+      </div>
+    </div>
+    <div class="imc-bar-wrap">
+      <div class="imc-bar-track">
+        <div class="imc-marker" id="imcMarker" style="left:2%"></div>
+      </div>
+      <div class="imc-bar-labels">
+        <span>Bajo peso</span><span>Normal</span><span>Sobrepeso</span><span>Obesidad</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDIDAS CORPORALES -->
+  <div class="card">
+    <div class="card-title">
+      Medidas corporales
+      <span style="font-size:11px;color:var(--muted);font-weight:400;">cm</span>
+    </div>
+    <div class="medidas-grid">
+      <div class="medida-item">
+        <div class="medida-label">Cintura</div>
+        <div class="medida-input-wrap">
+          <input type="number" class="medida-input" id="med-cintura" placeholder="—" min="40" max="200" step="0.5" />
+          <span class="medida-unit">cm</span>
+        </div>
+        <div class="medida-prev" id="prev-cintura">Anterior: —</div>
+      </div>
+      <div class="medida-item">
+        <div class="medida-label">Cadera</div>
+        <div class="medida-input-wrap">
+          <input type="number" class="medida-input" id="med-cadera" placeholder="—" min="50" max="200" step="0.5" />
+          <span class="medida-unit">cm</span>
+        </div>
+        <div class="medida-prev" id="prev-cadera">Anterior: —</div>
+      </div>
+      <div class="medida-item">
+        <div class="medida-label">Pecho</div>
+        <div class="medida-input-wrap">
+          <input type="number" class="medida-input" id="med-pecho" placeholder="—" min="50" max="200" step="0.5" />
+          <span class="medida-unit">cm</span>
+        </div>
+        <div class="medida-prev" id="prev-pecho">Anterior: —</div>
+      </div>
+      <div class="medida-item">
+        <div class="medida-label">Muslo</div>
+        <div class="medida-input-wrap">
+          <input type="number" class="medida-input" id="med-muslo" placeholder="—" min="30" max="120" step="0.5" />
+          <span class="medida-unit">cm</span>
+        </div>
+        <div class="medida-prev" id="prev-muslo">Anterior: —</div>
+      </div>
+      <div class="medida-item">
+        <div class="medida-label">Brazo</div>
+        <div class="medida-input-wrap">
+          <input type="number" class="medida-input" id="med-brazo" placeholder="—" min="15" max="80" step="0.5" />
+          <span class="medida-unit">cm</span>
+        </div>
+        <div class="medida-prev" id="prev-brazo">Anterior: —</div>
+      </div>
+      <div class="medida-item">
+        <div class="medida-label">Cuello</div>
+        <div class="medida-input-wrap">
+          <input type="number" class="medida-input" id="med-cuello" placeholder="—" min="20" max="80" step="0.5" />
+          <span class="medida-unit">cm</span>
+        </div>
+        <div class="medida-prev" id="prev-cuello">Anterior: —</div>
+      </div>
+    </div>
+    <button class="btn-guardar-medidas" onclick="guardarMedidas()">Guardar medidas de hoy</button>
+  </div>
+
+  <!-- FOTO PROGRESO -->
+  <div class="card">
+    <div class="card-title">Foto de progreso</div>
+    <div class="foto-placeholder" onclick="document.getElementById('fotoInput').click()">
+      <span class="foto-icon">📸</span>
+      <span class="foto-text">Toca para agregar una foto</span>
+      <span class="foto-sub">Solo se guarda en tu dispositivo · No se sube a ningún servidor</span>
+    </div>
+    <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="previsualizarFoto(event)" />
+    <div id="fotoPreview" style="display:none;">
+      <img id="fotoImg" style="width:100%;border-radius:var(--radius-sm);margin-top:8px;" />
+      <button class="btn-guardar-medidas" style="margin-top:10px;" onclick="guardarFoto()">Guardar foto</button>
+    </div>
+    <div id="fotosGuardadas" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-item" href="vitacore-dashboard.html">
+    <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+  </a>
+  <a class="nav-item" href="vitacore-calculadoras.html">
+    <span class="nav-icon">🔬</span><span class="nav-label">Calcular</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">🥗</span><span class="nav-label">Nutrición</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">💪</span><span class="nav-label">Entrena</span>
+  </a>
+  <a class="nav-item active" href="vitacore-progreso.html">
+    <span class="nav-icon">📈</span><span class="nav-label">Progreso</span>
+  </a>
+</nav>
+
+<script>
+  // ── STORAGE ──
+  const getPesos   = () => { try { return JSON.parse(localStorage.getItem('vitacore_pesos')) || []; } catch(e) { return []; } }
+  const savePesos  = d  => localStorage.setItem('vitacore_pesos', JSON.stringify(d));
+  const getMedidas = () => { try { return JSON.parse(localStorage.getItem('vitacore_medidas')) || []; } catch(e) { return []; } }
+  const saveMedidas= d  => localStorage.setItem('vitacore_medidas', JSON.stringify(d));
+  const getPerfil  = () => { try { return JSON.parse(localStorage.getItem('vitacore_perfil')) || null; } catch(e) { return null; } }
+
+  let periodoActivo = 7;
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── FECHA HOY ──
+  function hoy() {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }
+
+  function formatFecha(iso) {
+    const [y, m, dia] = iso.split('-');
+    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return `${dia} ${meses[parseInt(m)-1]} ${y}`;
+  }
+
+  // ── REGISTRAR PESO ──
+  function registrarPeso() {
+    const val   = parseFloat(document.getElementById('input-peso').value);
+    const fecha = document.getElementById('input-fecha').value || hoy();
+    if (!val || val < 20 || val > 400) { showToast('⚠️ Peso inválido'); return; }
+
+    const pesos = getPesos();
+    const existe = pesos.findIndex(p => p.fecha === fecha);
+    if (existe >= 0) {
+      if (!confirm(`Ya tienes un registro para ${formatFecha(fecha)}. ¿Reemplazar?`)) return;
+      pesos[existe].peso = val;
+    } else {
+      pesos.push({ fecha, peso: val });
+    }
+    pesos.sort((a, b) => a.fecha.localeCompare(b.fecha));
+    savePesos(pesos);
+    document.getElementById('input-peso').value = '';
+    showToast('✓ Peso registrado');
+    init();
+  }
+
+  // ── ELIMINAR REGISTRO ──
+  function eliminarPeso(fecha) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    const pesos = getPesos().filter(p => p.fecha !== fecha);
+    savePesos(pesos);
+    init();
+  }
+
+  // ── HISTORIAL ──
+  function renderHistorial(pesos) {
+    const container = document.getElementById('historialList');
+    if (!pesos.length) {
+      container.innerHTML = '<div class="historial-empty">Ningún registro todavía.</div>';
+      return;
+    }
+    const sorted = [...pesos].reverse();
+    container.innerHTML = sorted.map((r, i) => {
+      const prev  = sorted[i + 1];
+      const delta = prev ? (r.peso - prev.peso) : null;
+      let deltaHtml = '<span class="hist-delta" style="color:var(--muted)">—</span>';
+      if (delta !== null) {
+        const sign  = delta > 0 ? '+' : '';
+        const cls   = delta > 0 ? 'delta-pos' : delta < 0 ? 'delta-neg' : 'delta-neu';
+        deltaHtml = `<span class="hist-delta ${cls}">${sign}${delta.toFixed(1)}</span>`;
+      }
+      return `
+        <div class="historial-item">
+          <span class="hist-fecha">${formatFecha(r.fecha)}</span>
+          <span class="hist-peso">${r.peso} kg</span>
+          ${deltaHtml}
+          <button class="hist-del" onclick="eliminarPeso('${r.fecha}')" title="Eliminar">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── RESUMEN ──
+  function renderResumen(pesos, perfil) {
+    if (!pesos.length) {
+      ['res-inicial','res-actual','res-meta'].forEach(id => document.getElementById(id).textContent = '—');
+      document.getElementById('res-delta').textContent = '—';
+      document.getElementById('res-semanas').textContent = '—';
+      document.getElementById('res-inicial-fecha').textContent = '—';
+      return;
+    }
+
+    const primero = pesos[0];
+    const ultimo  = pesos[pesos.length - 1];
+    const delta   = ultimo.peso - primero.peso;
+    const sign    = delta > 0 ? '+' : '';
+    const deltaCls = delta > 0 ? 'delta-pos' : delta < 0 ? 'delta-neg' : 'delta-neu';
+
+    document.getElementById('res-inicial').textContent = primero.peso + ' kg';
+    document.getElementById('res-actual').textContent  = ultimo.peso + ' kg';
+    document.getElementById('res-inicial-fecha').textContent = formatFecha(primero.fecha);
+    document.getElementById('res-delta').innerHTML =
+      `<span class="${deltaCls}">${sign}${delta.toFixed(1)} kg</span>`;
+
+    // Meta estimada según objetivo
+    if (perfil) {
+      const obj = perfil.objetivo;
+      let metaPeso, semanas;
+      if (obj === 'corte') {
+        metaPeso = Math.max(ultimo.peso - 5, 50);
+        semanas  = Math.round(5 / 0.4); // ~0.4kg/sem
+      } else if (obj === 'volumen') {
+        metaPeso = ultimo.peso + 3;
+        semanas  = Math.round(3 / 0.25);
+      } else {
+        metaPeso = ultimo.peso;
+        semanas  = 0;
+      }
+      document.getElementById('res-meta').textContent   = metaPeso.toFixed(1) + ' kg';
+      document.getElementById('res-semanas').textContent = semanas ? `~${semanas} semanas` : 'Mantenimiento';
+    }
+  }
+
+  // ── IMC DINÁMICO ──
+  function renderIMC(pesoActual, perfil) {
+    if (!perfil || !pesoActual) return;
+    const altM = (perfil.altura || 170) / 100;
+    const imc  = pesoActual / (altM * altM);
+    let cat, color, range;
+    if      (imc < 18.5) { cat = 'Bajo peso';   color = '#4A90E2'; range = 'IMC < 18.5'; }
+    else if (imc < 25)   { cat = 'Normal ✓';    color = '#00E5A0'; range = 'IMC 18.5 – 24.9'; }
+    else if (imc < 30)   { cat = 'Sobrepeso';   color = '#FFD600'; range = 'IMC 25 – 29.9'; }
+    else                 { cat = 'Obesidad';     color = '#FF4D6D'; range = 'IMC ≥ 30'; }
+    document.getElementById('imc-val').textContent  = imc.toFixed(1);
+    document.getElementById('imc-val').style.color  = color;
+    document.getElementById('imc-cat').textContent  = cat;
+    document.getElementById('imc-cat').style.color  = color;
+    document.getElementById('imc-range').textContent = range;
+    const pct = Math.min(Math.max(((imc - 14) / 26) * 100, 2), 98);
+    document.getElementById('imcMarker').style.left = pct + '%';
+  }
+
+  // ── GRÁFICA ──
+  let chartInstance = null;
+
+  function renderChart(pesos, dias) {
+    const filtered = dias === 0 ? pesos : pesos.filter(p => {
+      const d = new Date(p.fecha);
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - dias);
+      return d >= cutoff;
+    });
+
+    const empty = document.getElementById('chartEmpty');
+    const canvas = document.getElementById('weightChart');
+
+    if (filtered.length < 2) {
+      empty.style.display = 'flex';
+      canvas.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    canvas.style.display = 'block';
+
+    const labels = filtered.map(p => {
+      const [,m,d] = p.fecha.split('-');
+      return `${d}/${m}`;
+    });
+    const data = filtered.map(p => p.peso);
+    const minPeso = Math.min(...data) - 1;
+    const maxPeso = Math.max(...data) + 1;
+
+    // Canvas draw
+    const ctx = canvas.getContext('2d');
+    const W = canvas.parentElement.offsetWidth - 36;
+    const H = 180;
+    canvas.width  = W;
+    canvas.height = H;
+
+    if (chartInstance) { chartInstance = null; }
+
+    const pad = { top: 16, right: 16, bottom: 28, left: 40 };
+    const cW  = W - pad.left - pad.right;
+    const cH  = H - pad.top  - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#262D3D';
+    ctx.lineWidth   = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (cH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
+      const val = maxPeso - ((maxPeso - minPeso) / 4) * i;
+      ctx.fillStyle = '#7A8499'; ctx.font = '10px Inter'; ctx.textAlign = 'right';
+      ctx.fillText(val.toFixed(1), pad.left - 6, y + 4);
+    }
+
+    // X labels
+    const step = Math.max(1, Math.floor(labels.length / 5));
+    ctx.fillStyle = '#7A8499'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
+    labels.forEach((l, i) => {
+      if (i % step === 0 || i === labels.length - 1) {
+        const x = pad.left + (i / (data.length - 1)) * cW;
+        ctx.fillText(l, x, H - 6);
+      }
+    });
+
+    const toX = i => pad.left + (i / (data.length - 1)) * cW;
+    const toY = v => pad.top + ((maxPeso - v) / (maxPeso - minPeso)) * cH;
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+    grad.addColorStop(0, 'rgba(0,229,160,0.18)');
+    grad.addColorStop(1, 'rgba(0,229,160,0)');
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(data[0]));
+    data.forEach((v, i) => { if (i > 0) ctx.lineTo(toX(i), toY(v)); });
+    ctx.lineTo(toX(data.length - 1), pad.top + cH);
+    ctx.lineTo(toX(0), pad.top + cH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(data[0]));
+    data.forEach((v, i) => { if (i > 0) ctx.lineTo(toX(i), toY(v)); });
+    ctx.strokeStyle = '#00E5A0'; ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round'; ctx.stroke();
+
+    // Dots
+    data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#00E5A0'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#0D0F14'; ctx.fill();
+    });
+
+    // Último valor destacado
+    const lx = toX(data.length - 1), ly = toY(data[data.length - 1]);
+    ctx.fillStyle = '#00E5A0'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center';
+    ctx.fillText(data[data.length - 1].toFixed(1) + ' kg', lx, ly - 10);
+  }
+
+  function setPeriodo(dias, btn) {
+    periodoActivo = dias;
+    document.querySelectorAll('.periodo-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const pesos = getPesos();
+    renderChart(pesos, dias);
+  }
+
+  // ── MEDIDAS ──
+  const MEDIDAS_KEYS = ['cintura','cadera','pecho','muslo','brazo','cuello'];
+
+  function renderMedidas() {
+    const historial = getMedidas();
+    if (!historial.length) return;
+    const ultima = historial[historial.length - 1];
+    const anterior = historial.length > 1 ? historial[historial.length - 2] : null;
+    MEDIDAS_KEYS.forEach(k => {
+      const input = document.getElementById(`med-${k}`);
+      const prev  = document.getElementById(`prev-${k}`);
+      if (ultima[k]) input.value = ultima[k];
+      if (anterior && anterior[k]) prev.textContent = `Anterior: ${anterior[k]} cm`;
+    });
+  }
+
+  function guardarMedidas() {
+    const entrada = { fecha: hoy() };
+    let alguno = false;
+    MEDIDAS_KEYS.forEach(k => {
+      const v = parseFloat(document.getElementById(`med-${k}`).value);
+      if (v) { entrada[k] = v; alguno = true; }
+    });
+    if (!alguno) { showToast('⚠️ Ingresa al menos una medida'); return; }
+    const historial = getMedidas();
+    const idx = historial.findIndex(m => m.fecha === hoy());
+    if (idx >= 0) historial[idx] = entrada;
+    else historial.push(entrada);
+    saveMedidas(historial);
+    renderMedidas();
+    showToast('✓ Medidas guardadas');
+  }
+
+  // ── FOTOS ──
+  let fotoBase64 = null;
+
+  function previsualizarFoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      fotoBase64 = ev.target.result;
+      document.getElementById('fotoImg').src = fotoBase64;
+      document.getElementById('fotoPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function guardarFoto() {
+    if (!fotoBase64) return;
+    const fotos = (() => { try { return JSON.parse(localStorage.getItem('vitacore_fotos')) || []; } catch(e) { return []; } })();
+    fotos.push({ fecha: hoy(), src: fotoBase64 });
+    try {
+      localStorage.setItem('vitacore_fotos', JSON.stringify(fotos));
+      showToast('✓ Foto guardada');
+    } catch(e) {
+      showToast('⚠️ Foto muy grande para guardar');
+    }
+    document.getElementById('fotoPreview').style.display = 'none';
+    fotoBase64 = null;
+    renderFotos();
+  }
+
+  function renderFotos() {
+    const fotos = (() => { try { return JSON.parse(localStorage.getItem('vitacore_fotos')) || []; } catch(e) { return []; } })();
+    const container = document.getElementById('fotosGuardadas');
+    container.innerHTML = fotos.slice(-4).reverse().map(f => `
+      <div style="width:calc(50% - 4px);">
+        <img src="${f.src}" style="width:100%;border-radius:8px;aspect-ratio:1;object-fit:cover;" />
+        <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:4px;">${formatFecha(f.fecha)}</div>
+      </div>`).join('');
+  }
+
+  // ── EXPORTAR CSV ──
+  function exportarCSV() {
+    const pesos = getPesos();
+    if (!pesos.length) { showToast('No hay datos para exportar'); return; }
+    const csv = 'Fecha,Peso (kg)\n' + pesos.map(p => `${p.fecha},${p.peso}`).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'vitacore_peso.csv'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('✓ CSV descargado');
+  }
+
+  // ── INIT ──
+  function init() {
+    const pesos  = getPesos();
+    const perfil = getPerfil();
+
+    // Fecha por defecto en input
+    document.getElementById('input-fecha').value = hoy();
+
+    renderResumen(pesos, perfil);
+    renderHistorial(pesos);
+    renderChart(pesos, periodoActivo);
+    renderMedidas();
+    renderFotos();
+
+    // IMC con peso más reciente
+    const pesoActual = pesos.length ? pesos[pesos.length - 1].peso : perfil?.peso;
+    if (pesoActual) renderIMC(pesoActual, perfil);
+
+    // Prellenar con peso del perfil si no hay registros
+    if (!pesos.length && perfil?.peso) {
+      document.getElementById('input-peso').value = perfil.peso;
+    }
+  }
+
+  init();
+  window.addEventListener('resize', () => renderChart(getPesos(), periodoActivo));
+</script>
+</body>
+</html>

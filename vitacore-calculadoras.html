@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitaCore — Calculadoras</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0D0F14;
+      --surface: #161A22;
+      --surface2: #1E2430;
+      --accent: #00E5A0;
+      --accent2: #0057FF;
+      --text: #F0F2F5;
+      --muted: #7A8499;
+      --border: #262D3D;
+      --danger: #FF4D6D;
+      --warning: #FFD600;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(13,15,20,0.92);
+      backdrop-filter: blur(12px);
+      padding: 16px 20px 12px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .logo span { color: var(--accent); }
+    .topbar-title { font-size: 14px; color: var(--muted); margin-left: auto; }
+
+    /* ── PAGE ── */
+    .page { max-width: 480px; margin: 0 auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+
+    /* ── CALC CARD ── */
+    .calc-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .calc-header {
+      padding: 16px 18px 14px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .calc-header:hover { background: var(--surface2); }
+    .calc-icon { font-size: 22px; }
+    .calc-info { flex: 1; }
+    .calc-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .calc-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .calc-chevron {
+      font-size: 18px; color: var(--muted);
+      transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    .calc-card.open .calc-chevron { transform: rotate(180deg); }
+
+    .calc-body {
+      display: none;
+      padding: 0 18px 18px;
+      flex-direction: column; gap: 14px;
+      border-top: 1px solid var(--border);
+      animation: fadeIn 0.2s ease;
+    }
+    .calc-card.open .calc-body { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── INPUTS ── */
+    .fields { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    input, select {
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 15px;
+      padding: 11px 12px; width: 100%; transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+    select option { background: var(--surface2); }
+
+    .sex-toggle {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+    }
+    .sex-btn {
+      padding: 11px; background: var(--surface2); border: none;
+      color: var(--muted); font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .sex-btn.selected { background: rgba(0,229,160,0.12); color: var(--accent); }
+
+    /* ── RESULT BOX ── */
+    .result-box {
+      background: linear-gradient(135deg, rgba(0,229,160,0.07), rgba(0,87,255,0.05));
+      border: 1.5px solid rgba(0,229,160,0.2);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      display: none; flex-direction: column; gap: 10px;
+    }
+    .result-box.show { display: flex; }
+
+    .result-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .result-label { font-size: 12px; color: var(--muted); }
+    .result-value { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); }
+    .result-unit { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+    .result-divider { height: 1px; background: var(--border); }
+
+    .macros-mini {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    }
+    .macro-mini {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 8px; text-align: center;
+    }
+    .macro-mini-g { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .macro-mini.prot .macro-mini-g { color: var(--accent); }
+    .macro-mini.carb .macro-mini-g { color: var(--accent2); }
+    .macro-mini.fat  .macro-mini-g { color: var(--danger); }
+    .macro-mini-name { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* IMC BAR */
+    .imc-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .imc-bar-track {
+      height: 6px; border-radius: 99px;
+      background: linear-gradient(90deg, #0057FF 0%, #00E5A0 40%, #FFD600 70%, #FF4D6D 100%);
+      position: relative;
+    }
+    .imc-marker {
+      width: 12px; height: 12px; background: white; border-radius: 50%;
+      border: 2px solid var(--bg); position: absolute; top: 50%;
+      transform: translate(-50%,-50%); transition: left 0.5s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .imc-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
+
+    /* ZONAS CARDIO */
+    .zonas { display: flex; flex-direction: column; gap: 6px; }
+    .zona-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border-radius: 8px; padding: 10px 12px;
+    }
+    .zona-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .zona-info { flex: 1; }
+    .zona-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .zona-desc { font-size: 11px; color: var(--muted); }
+    .zona-rango { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; }
+
+    /* NAVY RESULT */
+    .navy-result-big {
+      text-align: center; padding: 8px 0;
+    }
+    .navy-pct { font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .navy-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── CALC BUTTON ── */
+    .btn-calc {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #0D0F14;
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-calc:hover { filter: brightness(1.08); }
+
+    /* ── RESUMEN PERFIL ── */
+    .perfil-banner {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .perfil-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .perfil-info { flex: 1; }
+    .perfil-name { font-size: 14px; font-weight: 700; }
+    .perfil-meta { font-size: 12px; color: var(--muted); }
+    .perfil-edit {
+      font-size: 12px; color: var(--accent); cursor: pointer;
+      background: none; border: none; font-family: 'Inter', sans-serif;
+      font-weight: 600; padding: 4px 8px;
+    }
+
+    /* ── NAV BAR ── */
+    .navbar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(13,15,20,0.96); backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 12px; z-index: 20;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; padding: 4px 12px; border-radius: 8px;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface2); }
+    .nav-item.active .nav-icon { filter: none; }
+    .nav-item.active .nav-label { color: var(--accent); }
+    .nav-icon { font-size: 20px; filter: grayscale(1) opacity(0.5); }
+    .nav-item.active .nav-icon { filter: none; }
+    .nav-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .nav-item.active .nav-label { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Vita<span>Core</span></div>
+  <span class="topbar-title">Calculadoras</span>
+</div>
+
+<div class="page">
+
+  <!-- PERFIL BANNER -->
+  <div class="perfil-banner" id="perfilBanner" style="display:none;">
+    <div class="perfil-avatar">💪</div>
+    <div class="perfil-info">
+      <div class="perfil-name" id="banner-nombre">—</div>
+      <div class="perfil-meta" id="banner-meta">—</div>
+    </div>
+    <button class="perfil-edit" onclick="window.location.href='vitacore-onboarding.html'">Editar</button>
+  </div>
+
+  <div class="section-title">Metabolismo y Energía</div>
+
+  <!-- ════ CALC 1: TMB + TDEE ════ -->
+  <div class="calc-card" id="card-tmb">
+    <div class="calc-header" onclick="toggleCard('card-tmb')">
+      <span class="calc-icon">🔥</span>
+      <div class="calc-info">
+        <div class="calc-name">TMB y Calorías Diarias</div>
+        <div class="calc-desc">Tasa Metabólica Basal · Ecuación Mifflin-St Jeor</div>
+      </div>
+      <span class="calc-chevron">⌄</span>
+    </div>
+    <div class="calc-body">
+      <div class="fields">
+        <div class="field-row">
+          <div class="field-group">
+            <label>Peso (kg)</label>
+            <input type="number" id="tmb-peso" placeholder="72" min="30" max="300" step="0.1" />
+          </div>
+          <div class="field-group">
+            <label>Altura (cm)</label>
+            <input type="number" id="tmb-altura" placeholder="170" min="100" max="250" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Edad (años)</label>
+            <input type="number" id="tmb-edad" placeholder="25" min="14" max="99" />
+          </div>
+          <div class="field-group">
+            <label>Sexo</label>
+            <div class="sex-toggle">
+              <button class="sex-btn" id="tmb-hombre" onclick="setSex('tmb','hombre')">Hombre</button>
+              <button class="sex-btn" id="tmb-mujer" onclick="setSex('tmb','mujer')">Mujer</button>
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Nivel de Actividad</label>
+          <select id="tmb-actividad">
+            <option value="1.2">Sedentario — trabajo de escritorio</option>
+            <option value="1.375">Ligeramente activo — ejercicio 1–3 días/sem</option>
+            <option value="1.55" selected>Moderadamente activo — 3–5 días/sem</option>
+            <option value="1.725">Muy activo — 6–7 días/sem</option>
+            <option value="1.9">Extremadamente activo — trabajo físico + gym</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Objetivo</label>
+          <select id="tmb-objetivo">
+            <option value="mantenimiento">Mantenimiento</option>
+            <option value="corte">Perder grasa (déficit −400 kcal)</option>
+            <option value="volumen">Ganar músculo (superávit +350 kcal)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcTMB()">Calcular</button>
+      <div class="result-box" id="res-tmb">
+        <div class="result-row">
+          <span class="result-label">TMB (en reposo)</span>
+          <span><span class="result-value" id="tmb-r-tmb">—</span><span class="result-unit">kcal</span></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">TDEE (mantenimiento)</span>
+          <span><span class="result-value" id="tmb-r-tdee" style="color:var(--accent2)">—</span><span class="result-unit">kcal</span></span>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row">
+          <span class="result-label">🎯 Meta calórica diaria</span>
+          <span><span class="result-value" id="tmb-r-meta">—</span><span class="result-unit">kcal</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CALC 2: IMC ════ -->
+  <div class="calc-card" id="card-imc">
+    <div class="calc-header" onclick="toggleCard('card-imc')">
+      <span class="calc-icon">⚖️</span>
+      <div class="calc-info">
+        <div class="calc-name">Índice de Masa Corporal</div>
+        <div class="calc-desc">IMC · Estándar OMS</div>
+      </div>
+      <span class="calc-chevron">⌄</span>
+    </div>
+    <div class="calc-body">
+      <div class="fields">
+        <div class="field-row">
+          <div class="field-group">
+            <label>Peso (kg)</label>
+            <input type="number" id="imc-peso" placeholder="72" min="30" max="300" step="0.1" />
+          </div>
+          <div class="field-group">
+            <label>Altura (cm)</label>
+            <input type="number" id="imc-altura" placeholder="170" min="100" max="250" />
+          </div>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcIMC()">Calcular</button>
+      <div class="result-box" id="res-imc">
+        <div class="result-row">
+          <span class="result-label">Tu IMC</span>
+          <span><span class="result-value" id="imc-r-val">—</span></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Categoría OMS</span>
+          <span class="result-value" id="imc-r-cat" style="font-size:15px;">—</span>
+        </div>
+        <div class="result-divider"></div>
+        <div class="imc-bar-wrap">
+          <div class="imc-bar-track">
+            <div class="imc-marker" id="imc-marker" style="left:0%"></div>
+          </div>
+          <div class="imc-labels">
+            <span>Bajo (&lt;18.5)</span>
+            <span>Normal</span>
+            <span>Sobrepeso</span>
+            <span>Obesidad</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CALC 3: MACROS ════ -->
+  <div class="calc-card" id="card-macros">
+    <div class="calc-header" onclick="toggleCard('card-macros')">
+      <span class="calc-icon">🥗</span>
+      <div class="calc-info">
+        <div class="calc-name">Macronutrientes por Objetivo</div>
+        <div class="calc-desc">Proteína, carbohidratos y grasas en gramos</div>
+      </div>
+      <span class="calc-chevron">⌄</span>
+    </div>
+    <div class="calc-body">
+      <div class="fields">
+        <div class="field-row">
+          <div class="field-group">
+            <label>Peso (kg)</label>
+            <input type="number" id="mac-peso" placeholder="72" min="30" max="300" step="0.1" />
+          </div>
+          <div class="field-group">
+            <label>Calorías meta</label>
+            <input type="number" id="mac-cals" placeholder="2000" min="800" max="6000" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Objetivo</label>
+          <select id="mac-objetivo">
+            <option value="corte">Perder grasa (corte)</option>
+            <option value="mantenimiento" selected>Mantenimiento</option>
+            <option value="volumen">Ganar músculo (volumen)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcMacros()">Calcular</button>
+      <div class="result-box" id="res-macros">
+        <div class="macros-mini">
+          <div class="macro-mini prot">
+            <div class="macro-mini-g" id="mac-r-prot">—</div>
+            <div class="macro-mini-name">Proteína g</div>
+          </div>
+          <div class="macro-mini carb">
+            <div class="macro-mini-g" id="mac-r-carb">—</div>
+            <div class="macro-mini-name">Carbos g</div>
+          </div>
+          <div class="macro-mini fat">
+            <div class="macro-mini-g" id="mac-r-fat">—</div>
+            <div class="macro-mini-name">Grasas g</div>
+          </div>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row">
+          <span class="result-label">Calorías de proteína</span>
+          <span class="result-value" id="mac-r-pcal" style="font-size:15px;">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Calorías de carbos</span>
+          <span class="result-value" id="mac-r-ccal" style="font-size:15px; color:var(--accent2)">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Calorías de grasas</span>
+          <span class="result-value" id="mac-r-fcal" style="font-size:15px; color:var(--danger)">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Composición Corporal</div>
+
+  <!-- ════ CALC 4: NAVY ════ -->
+  <div class="calc-card" id="card-navy">
+    <div class="calc-header" onclick="toggleCard('card-navy')">
+      <span class="calc-icon">📏</span>
+      <div class="calc-info">
+        <div class="calc-name">% de Grasa Corporal</div>
+        <div class="calc-desc">Método Navy · Sin equipamiento especial</div>
+      </div>
+      <span class="calc-chevron">⌄</span>
+    </div>
+    <div class="calc-body">
+      <div class="fields">
+        <div class="field-group">
+          <label>Sexo</label>
+          <div class="sex-toggle">
+            <button class="sex-btn" id="navy-hombre" onclick="setSex('navy','hombre')">Hombre</button>
+            <button class="sex-btn" id="navy-mujer" onclick="setSex('navy','mujer')">Mujer</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Peso actual (kg)</label>
+            <input type="number" id="navy-peso" placeholder="72" min="30" max="300" step="0.1" />
+          </div>
+          <div class="field-group">
+            <label>Altura (cm)</label>
+            <input type="number" id="navy-altura" placeholder="170" min="100" max="250" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Circunferencia de cuello (cm)</label>
+          <input type="number" id="navy-cuello" placeholder="37" min="20" max="80" step="0.5" />
+        </div>
+        <div class="field-group" id="navy-abdomen-wrap">
+          <label>Circunferencia de abdomen (cm) <span style="color:var(--muted);font-weight:400">— solo hombres</span></label>
+          <input type="number" id="navy-abdomen" placeholder="85" min="40" max="200" step="0.5" />
+        </div>
+        <div class="field-group" id="navy-cintura-wrap" style="display:none;">
+          <label>Circunferencia de cintura (cm) <span style="color:var(--muted);font-weight:400">— mujeres</span></label>
+          <input type="number" id="navy-cintura" placeholder="70" min="40" max="200" step="0.5" />
+        </div>
+        <div class="field-group" id="navy-cadera-wrap" style="display:none;">
+          <label>Circunferencia de cadera (cm) <span style="color:var(--muted);font-weight:400">— mujeres</span></label>
+          <input type="number" id="navy-cadera" placeholder="95" min="50" max="200" step="0.5" />
+        </div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.5;">💡 Mide con una cinta métrica flexible. Abdomen: a la altura del ombligo. Cuello: justo debajo de la nuez. Cintura: parte más estrecha.</p>
+      </div>
+      <button class="btn-calc" onclick="calcNavy()">Calcular % grasa</button>
+      <div class="result-box" id="res-navy">
+        <div class="navy-result-big">
+          <div class="navy-pct" id="navy-r-pct">—</div>
+          <div class="navy-label">% de grasa corporal estimado</div>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row">
+          <span class="result-label">Masa grasa</span>
+          <span><span class="result-value" id="navy-r-grasa" style="color:var(--danger)">—</span><span class="result-unit">kg</span></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Masa magra</span>
+          <span><span class="result-value" id="navy-r-magra">—</span><span class="result-unit">kg</span></span>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-row">
+          <span class="result-label">Categoría</span>
+          <span class="result-value" id="navy-r-cat" style="font-size:14px;">—</span>
+        </div>
+        <p style="font-size:10px;color:var(--muted);">Precisión estimada ±3–4%. Para mayor exactitud usa el método de pliegues cutáneos.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Entrenamiento</div>
+
+  <!-- ════ CALC 5: FC MÁX + ZONAS ════ -->
+  <div class="calc-card" id="card-fc">
+    <div class="calc-header" onclick="toggleCard('card-fc')">
+      <span class="calc-icon">❤️</span>
+      <div class="calc-info">
+        <div class="calc-name">FC Máxima y Zonas de Cardio</div>
+        <div class="calc-desc">Fórmula Gellish · 5 zonas de entrenamiento</div>
+      </div>
+      <span class="calc-chevron">⌄</span>
+    </div>
+    <div class="calc-body">
+      <div class="fields">
+        <div class="field-group">
+          <label>Edad (años)</label>
+          <input type="number" id="fc-edad" placeholder="25" min="14" max="99" />
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calcFC()">Calcular zonas</button>
+      <div class="result-box" id="res-fc">
+        <div class="result-row">
+          <span class="result-label">FC Máxima estimada</span>
+          <span><span class="result-value" id="fc-r-max">—</span><span class="result-unit">lpm</span></span>
+        </div>
+        <div class="result-divider"></div>
+        <div class="zonas" id="fc-zonas"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <a class="nav-item" href="vitacore-onboarding.html">
+    <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+  </a>
+  <a class="nav-item active" href="#">
+    <span class="nav-icon">🔬</span><span class="nav-label">Calcular</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">🥗</span><span class="nav-label">Nutrición</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">💪</span><span class="nav-label">Entrena</span>
+  </a>
+  <a class="nav-item" href="#">
+    <span class="nav-icon">📈</span><span class="nav-label">Progreso</span>
+  </a>
+</nav>
+
+<script>
+  const sexState = {};
+
+  function toggleCard(id) {
+    const card = document.getElementById(id);
+    card.classList.toggle('open');
+  }
+
+  function setSex(calc, val) {
+    sexState[calc] = val;
+    document.getElementById(`${calc}-hombre`).classList.toggle('selected', val === 'hombre');
+    document.getElementById(`${calc}-mujer`).classList.toggle('selected', val === 'mujer');
+    if (calc === 'navy') {
+      document.getElementById('navy-abdomen-wrap').style.display = val === 'hombre' ? 'flex' : 'none';
+      document.getElementById('navy-cintura-wrap').style.display = val === 'mujer' ? 'flex' : 'none';
+      document.getElementById('navy-cadera-wrap').style.display  = val === 'mujer' ? 'flex' : 'none';
+    }
+  }
+
+  // ── TMB ──
+  function calcTMB() {
+    const peso   = parseFloat(document.getElementById('tmb-peso').value);
+    const altura = parseFloat(document.getElementById('tmb-altura').value);
+    const edad   = parseFloat(document.getElementById('tmb-edad').value);
+    const sexo   = sexState['tmb'];
+    const act    = parseFloat(document.getElementById('tmb-actividad').value);
+    const obj    = document.getElementById('tmb-objetivo').value;
+    if (!peso || !altura || !edad || !sexo) { alert('Completa todos los campos.'); return; }
+    const base = (10 * peso) + (6.25 * altura) - (5 * edad);
+    const tmb  = Math.round(sexo === 'hombre' ? base + 5 : base - 161);
+    const tdee = Math.round(tmb * act);
+    const ajuste = obj === 'corte' ? -400 : obj === 'volumen' ? 350 : 0;
+    const meta = tdee + ajuste;
+    document.getElementById('tmb-r-tmb').textContent  = tmb.toLocaleString();
+    document.getElementById('tmb-r-tdee').textContent = tdee.toLocaleString();
+    document.getElementById('tmb-r-meta').textContent = meta.toLocaleString();
+    document.getElementById('res-tmb').classList.add('show');
+  }
+
+  // ── IMC ──
+  function calcIMC() {
+    const peso   = parseFloat(document.getElementById('imc-peso').value);
+    const altura = parseFloat(document.getElementById('imc-altura').value);
+    if (!peso || !altura) { alert('Completa peso y altura.'); return; }
+    const altM = altura / 100;
+    const imc  = peso / (altM * altM);
+    let cat, color;
+    if      (imc < 18.5) { cat = 'Bajo peso';   color = '#0057FF'; }
+    else if (imc < 25)   { cat = 'Normal ✓';    color = '#00E5A0'; }
+    else if (imc < 30)   { cat = 'Sobrepeso';   color = '#FFD600'; }
+    else                 { cat = 'Obesidad';     color = '#FF4D6D'; }
+    document.getElementById('imc-r-val').textContent = imc.toFixed(1);
+    document.getElementById('imc-r-cat').textContent = cat;
+    document.getElementById('imc-r-cat').style.color = color;
+    const pct = Math.min(Math.max(((imc - 14) / 26) * 100, 2), 98);
+    document.getElementById('imc-marker').style.left = pct + '%';
+    document.getElementById('res-imc').classList.add('show');
+  }
+
+  // ── MACROS ──
+  function calcMacros() {
+    const peso = parseFloat(document.getElementById('mac-peso').value);
+    const cals = parseFloat(document.getElementById('mac-cals').value);
+    const obj  = document.getElementById('mac-objetivo').value;
+    if (!peso || !cals) { alert('Completa peso y calorías meta.'); return; }
+    let protR, fatR;
+    if      (obj === 'corte')         { protR = 2.4; fatR = 0.9; }
+    else if (obj === 'volumen')       { protR = 2.0; fatR = 1.2; }
+    else                              { protR = 2.0; fatR = 1.0; }
+    const prot = Math.round(protR * peso);
+    const fat  = Math.round(fatR * peso);
+    const carbCals = cals - (prot * 4) - (fat * 9);
+    const carb = Math.round(Math.max(carbCals / 4, 50));
+    document.getElementById('mac-r-prot').textContent = prot;
+    document.getElementById('mac-r-carb').textContent = carb;
+    document.getElementById('mac-r-fat').textContent  = fat;
+    document.getElementById('mac-r-pcal').textContent = (prot * 4) + ' kcal';
+    document.getElementById('mac-r-ccal').textContent = (carb * 4) + ' kcal';
+    document.getElementById('mac-r-fcal').textContent = (fat * 9)  + ' kcal';
+    document.getElementById('res-macros').classList.add('show');
+  }
+
+  // ── NAVY ──
+  function calcNavy() {
+    const sexo   = sexState['navy'];
+    const altura = parseFloat(document.getElementById('navy-altura').value);
+    const cuello = parseFloat(document.getElementById('navy-cuello').value);
+    if (!sexo || !altura || !cuello) { alert('Completa todos los campos y selecciona sexo.'); return; }
+    let pctGrasa;
+    if (sexo === 'hombre') {
+      const abdomen = parseFloat(document.getElementById('navy-abdomen').value);
+      if (!abdomen) { alert('Ingresa la circunferencia de abdomen.'); return; }
+      pctGrasa = 495 / (1.0324 - 0.19077 * Math.log10(abdomen - cuello) + 0.15456 * Math.log10(altura)) - 450;
+    } else {
+      const cintura = parseFloat(document.getElementById('navy-cintura').value);
+      const cadera  = parseFloat(document.getElementById('navy-cadera').value);
+      if (!cintura || !cadera) { alert('Ingresa cintura y cadera.'); return; }
+      pctGrasa = 495 / (1.29579 - 0.35004 * Math.log10(cintura + cadera - cuello) + 0.22100 * Math.log10(altura)) - 450;
+    }
+    pctGrasa = Math.max(3, Math.min(60, pctGrasa));
+    const pesoIngresado = parseFloat(document.getElementById('navy-peso').value);
+    const pesoGuardado = (() => { try { return JSON.parse(localStorage.getItem('vitacore_perfil'))?.peso; } catch(e){return null;} })();
+    const pesoReal = pesoIngresado || pesoGuardado || 70;
+    if (!pesoIngresado) { alert('Ingresa tu peso para calcular masa grasa y masa magra.'); return; }
+    const masaGrasa = (pctGrasa / 100) * pesoReal;
+    const masaMagra = pesoReal - masaGrasa;
+
+    let cat;
+    if (sexo === 'hombre') {
+      if      (pctGrasa < 6)  cat = 'Esencial';
+      else if (pctGrasa < 14) cat = 'Atlético';
+      else if (pctGrasa < 18) cat = 'Fitness';
+      else if (pctGrasa < 25) cat = 'Promedio';
+      else                    cat = 'Obesidad';
+    } else {
+      if      (pctGrasa < 14) cat = 'Esencial';
+      else if (pctGrasa < 21) cat = 'Atlético';
+      else if (pctGrasa < 25) cat = 'Fitness';
+      else if (pctGrasa < 32) cat = 'Promedio';
+      else                    cat = 'Obesidad';
+    }
+
+    document.getElementById('navy-r-pct').textContent   = pctGrasa.toFixed(1) + '%';
+    document.getElementById('navy-r-grasa').textContent = masaGrasa.toFixed(1);
+    document.getElementById('navy-r-magra').textContent = masaMagra.toFixed(1);
+    document.getElementById('navy-r-cat').textContent   = cat;
+    document.getElementById('res-navy').classList.add('show');
+  }
+
+  // ── FC MÁX + ZONAS ──
+  function calcFC() {
+    const edad = parseFloat(document.getElementById('fc-edad').value);
+    if (!edad || edad < 14 || edad > 99) { alert('Ingresa una edad válida.'); return; }
+    const fcMax = Math.round(207 - 0.7 * edad);
+    document.getElementById('fc-r-max').textContent = fcMax;
+
+    const zonas = [
+      { num: 1, nombre: 'Zona 1 — Recuperación',    rango: [50, 60], color: '#4A90E2', desc: 'Caminar, recuperación activa' },
+      { num: 2, nombre: 'Zona 2 — Quema de grasa',  rango: [60, 70], color: '#00E5A0', desc: 'Cardio base, resistencia aeróbica' },
+      { num: 3, nombre: 'Zona 3 — Aeróbica',        rango: [70, 80], color: '#FFD600', desc: 'Cardio moderado, resistencia' },
+      { num: 4, nombre: 'Zona 4 — Umbral anaeróbico', rango: [80, 90], color: '#FF8C00', desc: 'Intervalos, capacidad máxima' },
+      { num: 5, nombre: 'Zona 5 — Máxima',          rango: [90,100], color: '#FF4D6D', desc: 'Sprint, esfuerzo total' },
+    ];
+
+    const container = document.getElementById('fc-zonas');
+    container.innerHTML = zonas.map(z => {
+      const min = Math.round(fcMax * z.rango[0] / 100);
+      const max = Math.round(fcMax * z.rango[1] / 100);
+      return `
+        <div class="zona-row">
+          <div class="zona-dot" style="background:${z.color}"></div>
+          <div class="zona-info">
+            <div class="zona-name">${z.nombre}</div>
+            <div class="zona-desc">${z.desc}</div>
+          </div>
+          <div class="zona-rango" style="color:${z.color}">${min}–${max}</div>
+        </div>`;
+    }).join('');
+    document.getElementById('res-fc').classList.add('show');
+  }
+
+  // ── CARGAR PERFIL GUARDADO ──
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem('vitacore_perfil');
+    if (saved) {
+      const p = JSON.parse(saved);
+      document.getElementById('perfilBanner').style.display = 'flex';
+      document.getElementById('banner-nombre').textContent = p.nombre || '—';
+      document.getElementById('banner-meta').textContent =
+        `${p.peso}kg · ${p.altura}cm · ${p.edad} años · Objetivo: ${
+          p.objetivo === 'corte' ? 'Perder grasa' :
+          p.objetivo === 'volumen' ? 'Ganar músculo' : 'Mantenimiento'}`;
+      // Prellenar campos con datos del perfil
+      ['tmb','imc','mac'].forEach(calc => {
+        const pesoEl   = document.getElementById(`${calc}-peso`);
+        const alturaEl = document.getElementById(`${calc}-altura`);
+        if (pesoEl)   pesoEl.value   = p.peso;
+        if (alturaEl) alturaEl.value = p.altura;
+      });
+      if (document.getElementById('tmb-edad')) document.getElementById('tmb-edad').value = p.edad;
+      if (document.getElementById('fc-edad'))  document.getElementById('fc-edad').value  = p.edad;
+      if (document.getElementById('navy-altura')) document.getElementById('navy-altura').value = p.altura;
+      if (document.getElementById('navy-peso'))   document.getElementById('navy-peso').value   = p.peso;
+      if (document.getElementById('mac-cals') && p.calorias) document.getElementById('mac-cals').value = p.calorias;
+      if (p.sexo) { setSex('tmb', p.sexo); setSex('navy', p.sexo); }
+      if (p.objetivo) {
+        const tmbObj = document.getElementById('tmb-objetivo');
+        const macObj = document.getElementById('mac-objetivo');
+        if (tmbObj) tmbObj.value = p.objetivo;
+        if (macObj) macObj.value = p.objetivo;
+      }
+      if (p.actividad) {
+        const actEl = document.getElementById('tmb-actividad');
+        if (actEl) actEl.value = p.actividad;
+      }
+    }
+  });
+</script>
+</body>
+</html>
