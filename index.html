@@ -811,29 +811,162 @@
     document.getElementById('step-result').classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Guardar en localStorage
-    const data = { ...profile, tmb, tdee, calorias, imc: imc.toFixed(1), fc, macros, fechaCreacion: new Date().toISOString() };
-    localStorage.setItem('vitacore_perfil', JSON.stringify(data));
+    // Guardar perfil en lista de perfiles
+    const data = { ...profile, tmb, tdee, calorias, imc: imc.toFixed(1), fc, macros, fechaCreacion: new Date().toISOString(), id: 'p_' + Date.now() };
+    const perfiles = getPerfiles();
+    perfiles.push(data);
+    savePerfiles(perfiles);
+    setPerfilActivo(data);
   }
 
   function guardarYContinuar() {
-    window.location.href = "vitacore-dashboard.html";
+    window.location.href = 'vitacore-dashboard.html';
   }
 
-  // Si ya hay perfil guardado, ofrecer continuar
-  window.addEventListener('load', () => {
-    const saved = localStorage.getItem('vitacore_perfil');
-    if (saved) {
-      const p = JSON.parse(saved);
-      const continuar = confirm(`Bienvenido de nuevo, ${p.nombre}. ¿Quieres ver tu perfil guardado?`);
-      if (continuar) {
-        Object.assign(profile, p);
-        calcularYMostrar();
-        document.getElementById('splash').style.display = 'none';
-        document.getElementById('topbar').style.display = 'flex';
-      }
+  // ── GESTIÓN DE PERFILES ──
+  const getPerfiles    = () => { try { return JSON.parse(localStorage.getItem('vitacore_perfiles')) || []; } catch(e) { return []; } };
+  const savePerfiles   = d  => localStorage.setItem('vitacore_perfiles', JSON.stringify(d));
+  const setPerfilActivo= p  => localStorage.setItem('vitacore_perfil', JSON.stringify(p));
+  const getPerfilActivo= () => { try { return JSON.parse(localStorage.getItem('vitacore_perfil')); } catch(e) { return null; } };
+
+  function mostrarSelectorPerfiles() {
+    const perfiles = getPerfiles();
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('topbar').style.display = 'none';
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.getElementById('pantalla-perfiles').style.display = 'flex';
+    renderListaPerfiles(perfiles);
+  }
+
+  function renderListaPerfiles(perfiles) {
+    const activo = getPerfilActivo();
+    const lista  = document.getElementById('lista-perfiles');
+    const objLabel = { corte:'Perder grasa', volumen:'Ganar músculo', mantenimiento:'Mantenimiento' };
+    lista.innerHTML = perfiles.map(p => `
+      <div class="perfil-item ${activo?.id===p.id?'activo':''}" onclick="seleccionarPerfil('${p.id}')">
+        <div class="perfil-avatar">${p.nombre.charAt(0).toUpperCase()}</div>
+        <div class="perfil-data">
+          <div class="perfil-nombre">${p.nombre}</div>
+          <div class="perfil-meta">${objLabel[p.objetivo]||'—'} · ${p.peso}kg · ${p.altura}cm</div>
+        </div>
+        ${activo?.id===p.id ? '<span class="perfil-activo-badge">Activo</span>' : ''}
+        <button class="perfil-del" onclick="event.stopPropagation(); eliminarPerfil('${p.id}')">✕</button>
+      </div>`).join('');
+  }
+
+  function seleccionarPerfil(id) {
+    const perfiles = getPerfiles();
+    const p = perfiles.find(x => x.id === id);
+    if (!p) return;
+    setPerfilActivo(p);
+    window.location.href = 'vitacore-dashboard.html';
+  }
+
+  function eliminarPerfil(id) {
+    const activo   = getPerfilActivo();
+    let perfiles   = getPerfiles().filter(p => p.id !== id);
+    savePerfiles(perfiles);
+    if (activo?.id === id) {
+      if (perfiles.length) setPerfilActivo(perfiles[0]);
+      else localStorage.removeItem('vitacore_perfil');
     }
+    renderListaPerfiles(perfiles);
+  }
+
+  function nuevoPerfil() {
+    document.getElementById('pantalla-perfiles').style.display = 'none';
+    document.getElementById('splash').style.display = 'flex';
+  }
+
+  // Al cargar — mostrar selector si hay perfiles, splash si no
+  window.addEventListener('load', () => {
+    const perfiles = getPerfiles();
+
+    // Migrar perfil antiguo si existe
+    const legacy = localStorage.getItem('vitacore_perfil');
+    if (legacy && !perfiles.length) {
+      try {
+        const p = JSON.parse(legacy);
+        if (!p.id) { p.id = 'p_legacy'; perfiles.push(p); savePerfiles(perfiles); }
+      } catch(e) {}
+    }
+
+    if (perfiles.length) {
+      mostrarSelectorPerfiles();
+    }
+    // Si no hay perfiles, el splash ya está visible por defecto
   });
 </script>
+
+<style>
+  #pantalla-perfiles {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    padding: 40px 24px 40px;
+    gap: 20px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+  .perfiles-logo { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; }
+  .perfiles-logo span { color: var(--accent); }
+  .perfiles-titulo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; text-align:center; }
+  .perfiles-sub { font-size:14px; color:var(--muted); text-align:center; }
+
+  #lista-perfiles { width:100%; display:flex; flex-direction:column; gap:10px; }
+
+  .perfil-item {
+    display:flex; align-items:center; gap:12px;
+    background: var(--surface); border:1.5px solid var(--border);
+    border-radius: var(--radius); padding:14px 16px;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .perfil-item:hover { border-color:var(--accent); }
+  .perfil-item.activo { border-color:var(--accent); background:rgba(0,229,160,0.06); }
+
+  .perfil-avatar {
+    width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+    color:#0D0F14; flex-shrink:0;
+  }
+  .perfil-data { flex:1; }
+  .perfil-nombre { font-size:15px; font-weight:700; }
+  .perfil-meta   { font-size:12px; color:var(--muted); margin-top:2px; }
+  .perfil-activo-badge {
+    font-size:11px; font-weight:700; color:var(--accent);
+    background:rgba(0,229,160,0.12); border-radius:99px; padding:3px 8px;
+    white-space:nowrap;
+  }
+  .perfil-del {
+    background:none; border:none; color:var(--muted);
+    font-size:16px; cursor:pointer; padding:4px 6px;
+  }
+  .perfil-del:hover { color:var(--danger); }
+
+  .btn-nuevo-perfil {
+    width:100%; padding:15px;
+    background:var(--surface); border:1.5px dashed var(--border);
+    border-radius:var(--radius); font-family:'Inter',sans-serif;
+    font-size:14px; font-weight:700; color:var(--muted);
+    cursor:pointer; transition:all 0.15s;
+  }
+  .btn-nuevo-perfil:hover { border-color:var(--accent); color:var(--accent); }
+</style>
+
+<!-- PANTALLA SELECTOR DE PERFILES -->
+<div id="pantalla-perfiles">
+  <div class="perfiles-logo">Vita<span>Core</span></div>
+  <div class="perfiles-titulo">¿Quién entrena hoy?</div>
+  <div class="perfiles-sub">Selecciona tu perfil o crea uno nuevo</div>
+  <div id="lista-perfiles"></div>
+  <button class="btn-nuevo-perfil" onclick="nuevoPerfil()">+ Crear nuevo perfil</button>
+  <p style="font-size:11px;color:var(--muted);text-align:center;">Toca un perfil para entrar · ✕ para eliminar</p>
+</div>
 </body>
 </html>

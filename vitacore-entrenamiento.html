@@ -184,6 +184,7 @@
       </div>
       <div class="sesion-btns">
         <button class="btn-sesion secondary" onclick="verWarmup()">🔥 Warmup</button>
+        <button class="btn-sesion primary" id="btnIniciarTimer" onclick="iniciarTimer()" style="display:none;">▶ Iniciar</button>
         <button class="btn-sesion danger" onclick="finalizarSesion()">Finalizar</button>
       </div>
     </div>
@@ -435,7 +436,9 @@ function render() {
     document.getElementById('sesionActivaWrap').style.display = 'block';
     document.getElementById('sinSesionWrap').style.display    = 'none';
     renderSesionActiva();
-    if (!timerInterval) startTimer();
+    // Mostrar botón iniciar si el timer no ha arrancado
+    const btnTimer = document.getElementById('btnIniciarTimer');
+    if (btnTimer) btnTimer.style.display = timerInterval ? 'none' : 'block';
   } else {
     document.getElementById('sesionActivaWrap').style.display = 'none';
     document.getElementById('sinSesionWrap').style.display    = 'block';
@@ -586,6 +589,16 @@ function addSerie(ei) {
 // ══════════════════════════════════════
 // TIMER SESIÓN
 // ══════════════════════════════════════
+function iniciarTimer() {
+  if (timerInterval) return;
+  sesionActiva.inicio = Date.now() - (sesionSegundos * 1000);
+  saveSesActiva(sesionActiva);
+  startTimer();
+  const btn = document.getElementById('btnIniciarTimer');
+  if (btn) btn.style.display = 'none';
+  showToast('⏱ Cronómetro iniciado');
+}
+
 function startTimer() {
   if (sesionActiva?.inicio) sesionSegundos = Math.floor((Date.now()-sesionActiva.inicio)/1000);
   timerInterval = setInterval(()=>{

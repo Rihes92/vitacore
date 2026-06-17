@@ -390,7 +390,7 @@
   <a class="nav-item" href="vitacore-dashboard.html"><span class="nav-icon">🏠</span><span class="nav-label">Inicio</span></a>
   <a class="nav-item" href="vitacore-calculadoras.html"><span class="nav-icon">🔬</span><span class="nav-label">Calcular</span></a>
   <a class="nav-item active" href="#"><span class="nav-icon">🥗</span><span class="nav-label">Nutrición</span></a>
-  <a class="nav-item" href="vitacore-entrenamiento.html"><span class="nav-icon">💪</span><span class="nav-label">Entrena</span></a>
+  <a class="nav-item" href="#"><span class="nav-icon">💪</span><span class="nav-label">Entrena</span></a>
   <a class="nav-item" href="vitacore-progreso.html"><span class="nav-icon">📈</span><span class="nav-label">Progreso</span></a>
 </nav>
 
@@ -702,8 +702,8 @@ function onSearch(q) {
 
 async function buscarOpenFoodFacts(q, htmlPrevio) {
   try {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments,image_small_url,brands`;
-    const res  = await fetch(url);
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments,brands&lc=es`;
+    const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
     const data = await res.json();
     const productos = (data.products || []).filter(p=>p.product_name && p.nutriments?.['energy-kcal_100g']);
     let offHtml = '';
